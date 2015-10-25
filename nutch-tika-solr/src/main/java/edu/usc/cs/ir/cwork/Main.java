@@ -2,11 +2,15 @@ package edu.usc.cs.ir.cwork;
 
 import edu.usc.cs.ir.cwork.nutch.RecordIterator;
 import edu.usc.cs.ir.cwork.nutch.SegContentReader;
+import edu.usc.cs.ir.cwork.solr.ContentBean;
+import edu.usc.cs.ir.cwork.solr.SolrUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.nutch.protocol.Content;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -17,11 +21,11 @@ import org.kohsuke.args4j.spi.SubCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -67,7 +71,7 @@ public class Main {
             return INDEX;
         }
 
-        public void run() throws IOException {
+        public void run() throws IOException, InterruptedException, SolrServerException {
 
             SolrServer solr = new HttpSolrServer(solrUrl.toString());
             FileInputStream stream = new FileInputStream(segsFile);
@@ -80,11 +84,39 @@ public class Main {
             System.out.println(recs.getCount());
         }
 
-        private void index(RecordIterator recs, SolrServer solr) {
+        private void index(RecordIterator recs, SolrServer solr) throws IOException, SolrServerException {
+            int batchSize = 1000;
+            List<ContentBean> beans = new ArrayList<>(batchSize);
+            long st = System.currentTimeMillis();
+            long count = 0;
+            long delay = 2 * 1000;
+
             while (recs.hasNext()) {
                 Pair<String, Content> rec = recs.next();
-                System.out.println(rec.getValue().getUrl() + "::" + rec.getValue().getMetadata());
+                Content content = rec.getValue();
+                ContentBean bean = SolrUtil.createBean(content);
+                beans.add(bean);
+                count++;
+                if (beans.size() >= batchSize) {
+                    solr.addBeans(beans);
+                    beans.clear();
+                }
+
+                if (System.currentTimeMillis() - st > delay) {
+                    LOG.info("Num Docs : {}", count);
+                    st = System.currentTimeMillis();
+                }
             }
+
+            //left out
+            if (!beans.isEmpty()) {
+                solr.addBeans(beans);
+            }
+
+            // commit
+            LOG.info("Committing before exit. Num Docs = {}", count);
+            UpdateResponse response = solr.commit();
+            LOG.info("Commit response : {}", response);
         }
     }
 
@@ -100,7 +132,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
-        args = "index -segs data/paths.txt -url http://localhost:8983".split(" ");
+        args = "index -segs data/paths-all.txt -url http://localhost:8983/solr".split(" ");
         Main main = new Main();
         CmdLineParser parser = new CmdLineParser(main);
         try {

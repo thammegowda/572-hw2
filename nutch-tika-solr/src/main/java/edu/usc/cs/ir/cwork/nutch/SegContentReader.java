@@ -37,7 +37,7 @@ public class SegContentReader {
             while (files.hasNext()){
                 LocatedFileStatus next = files.next();
                 if (next.isFile() && fileName.equals(next.getPath().getName())) {
-                 parts.add(next.getPath());
+                    parts.add(next.getPath());
                 }
             }
         }
