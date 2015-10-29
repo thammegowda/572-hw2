@@ -14,21 +14,24 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.kohsuke.args4j.Option;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by tg on 10/29/15.
  */
 public class SolrIndexer implements Main.Command {
+
+
+    public static final String MD_SUFFIX = "_md";
+    private static Logger LOG = LoggerFactory.getLogger(SolrIndexer.class);
 
     @Option(name = "-segs", aliases = {"--seg-paths"},
             usage = "Path to a text file containing segment paths. One path per line",
@@ -68,15 +71,20 @@ public class SolrIndexer implements Main.Command {
         Metadata metadata = content.getMetadata();
         if (reparse) {
             Pair<String, org.apache.tika.metadata.Metadata> pair = Parser.INSTANCE.parse(content);
-            org.apache.tika.metadata.Metadata tikaMd = pair.getSecond();
-            metadata = new Metadata();
-            for (String name : tikaMd.names()) {
-                String[] values = tikaMd.isMultiValued(name) ?
-                        tikaMd.getValues(name) :
-                        new String[]{tikaMd.get(name)};
-                for (String value : values) {
-                    metadata.add(name, value);
+            try {
+                org.apache.tika.metadata.Metadata tikaMd = pair.getSecond();
+                metadata = new Metadata();
+                for (String name : tikaMd.names()) {
+                    String[] values = tikaMd.isMultiValued(name) ?
+                            tikaMd.getValues(name) :
+                            new String[]{tikaMd.get(name)};
+                    for (String value : values) {
+                        metadata.add(name, value);
+                    }
                 }
+            } catch ( Exception e){
+                LOG.info("Parse Failed for {} : {}. Msg:{}", content.getUrl(),
+                        content.getContentType(), e.getMessage());
             }
         }
         String[] names = metadata.names();
@@ -88,7 +96,16 @@ public class SolrIndexer implements Main.Command {
             mdFields.put(name, val);
         }
 
-        bean.setMetadata(mapper.mapFields(mdFields, true));
+        Map<String, Object> mappedMdFields = mapper.mapFields(mdFields, true);
+        Map<String, Object> suffixedFields = new HashMap<>();
+        mappedMdFields.forEach((k,v) -> {
+            if (!k.endsWith(MD_SUFFIX)) {
+                k += MD_SUFFIX;
+            }
+            suffixedFields.put(k, v);
+        });
+
+        bean.setMetadata(suffixedFields);
         return bean;
     }
 
@@ -115,7 +132,7 @@ public class SolrIndexer implements Main.Command {
         while (recs.hasNext()) {
             Pair<String, Content> rec = recs.next();
             Content content = rec.getValue();
-            ContentBean bean = createBean(content, true);
+            ContentBean bean = createBean(content, false);
             beans.add(bean);
             count++;
             if (beans.size() >= batchSize) {
