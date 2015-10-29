@@ -1,6 +1,8 @@
 package edu.usc.cs.ir.solr.dynschema;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 /**
@@ -30,7 +32,7 @@ public class StringEvaluator {
             (("" + Long.MAX_VALUE).length() - 1) +"}$";
 
     public static String BOOL_REGEX = "(?i)^(true|false)$";
-    public static String DOUBLE_REGEX = "^[+-]?\\d+(\\.\\d+)?$";
+    public static String DOUBLE_REGEX = "^[+-]?\\d+(\\.\\d+)?([Ee][+-]\\d+)?$";
     private static LinkedHashMap<String, Eval> evals = new LinkedHashMap<>();
     static {
         //regex  -> evaluator
@@ -87,8 +89,13 @@ public class StringEvaluator {
                 object.getClass().getComponentType().equals(String.class)){
             String[] items = (String[]) object;
 
-            Object[] result = new Object[items.length];
-            for (int i = 0; i < items.length; i++) {
+            if (items.length < 1) {
+                return null;
+            }
+            Object first = valueOf(items[0]);
+            Object[] result = (Object[]) Array.newInstance(first.getClass(), items.length);
+            result[0] = first;
+            for (int i = 1; i < items.length; i++) {
                 result[i] = valueOf(items[i]);
             }
             return result;
