@@ -144,7 +144,12 @@ public class FieldMapper {
         return fieldName + suffix;
     }
 
-
+    /**
+     * Maps fields to dynamic schema
+     * @param fields fields to be mapped
+     * @param eval cast the value type
+     * @return mapped fields
+     */
     public Map<String, Object> mapFields(Map<String, Object> fields, boolean eval){
         Map<String, Object> result = new HashMap<>();
 

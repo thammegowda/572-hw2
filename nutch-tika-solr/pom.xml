@@ -30,6 +30,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>edu.usc.cs.ir.cwork</groupId>
+      <artifactId>solr-dynschema</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-solrj</artifactId>
       <version>${solr.version}</version>

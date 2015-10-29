@@ -28,4 +28,23 @@ public class StringEvaluatorTest {
         assertEquals(2.0, valuator.valueOf("2.0"));
 
     }
+
+    @Test
+    public void testCanEval() throws Exception {
+        StringEvaluator valuator = new StringEvaluator();
+        assertEquals(true, valuator.canEval("abcd"));
+        assertEquals(true, valuator.canEval(new String[]{"1", "2"}));
+        assertEquals(false, valuator.canEval(1234));
+        assertEquals(false, valuator.canEval(new int[]{1, 2}));
+    }
+
+    @Test
+    public void testEval() throws Exception {
+        StringEvaluator valuator = new StringEvaluator();
+
+        assertEquals(1, valuator.eval("1"));
+        assertArrayEquals(new Object[]{1, 2}, (Object[]) valuator.eval(new String[]{"1", "2"}));
+        assertEquals(1.1, valuator.eval("1.1"));
+        assertEquals(true, valuator.eval("true"));
+    }
 }

@@ -60,4 +60,41 @@ public class StringEvaluator {
         }
         return s;
     }
+
+    /**
+     * checks if this can eval object (could be string or array of strings)
+     * @param object object which needs to be evaluated
+     * @return true eval possible
+     */
+    public boolean canEval(Object object){
+        return String.class.equals(object.getClass()) ||
+                ( object.getClass().isArray() && object.getClass()
+                        .getComponentType().equals(String.class));
+    }
+
+    /**
+     * evaluates object (string or array of string)
+     * @see #canEval(Object)
+     * @param object the object which needs to be evaluated
+     * @return object created by evaluating the argument
+     * @throws IllegalArgumentException when eval not possible,
+     * check {@link #canEval(Object)} prior calling this method
+     */
+    public Object eval(Object object){
+        if (object.getClass().equals(String.class)) {
+            return valueOf(object.toString());
+        } else if (object.getClass().isArray() &&
+                object.getClass().getComponentType().equals(String.class)){
+            String[] items = (String[]) object;
+
+            Object[] result = new Object[items.length];
+            for (int i = 0; i < items.length; i++) {
+                result[i] = valueOf(items[i]);
+            }
+            return result;
+        } else {
+            //check canEval()
+            throw new IllegalArgumentException("Eval not possible for " + object.getClass());
+        }
+    }
 }
