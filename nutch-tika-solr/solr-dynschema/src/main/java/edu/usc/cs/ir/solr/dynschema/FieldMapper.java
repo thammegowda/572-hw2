@@ -141,6 +141,7 @@ public class FieldMapper {
         if (fieldName.endsWith(suffix)) {
             return fieldName;
         }
+        fieldName = fieldName.toLowerCase().replaceAll("\\s+", "");
         return fieldName + suffix;
     }
 
