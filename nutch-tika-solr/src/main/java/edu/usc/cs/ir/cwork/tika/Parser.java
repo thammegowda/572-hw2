@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.nutch.protocol.Content;
 import org.apache.tika.Tika;
+import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * Created by tg on 10/25/15.
@@ -18,12 +20,23 @@ import java.io.IOException;
 public enum Parser {
     INSTANCE;
 
-    public static final Logger LOG = LoggerFactory.getLogger(Parser.class);
+    public final Logger LOG = LoggerFactory.getLogger(Parser.class);
 
     private Tika tika;
 
     Parser() {
-        this.tika = new Tika();
+        URL confFile = getClass().getClassLoader().getResource("tika-config.xml");
+        if (confFile != null) {
+            LOG.info("Found tika conf at  {}", confFile);
+            try {
+                TikaConfig config = new TikaConfig(confFile);
+                tika = new Tika(config);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            throw new RuntimeException("No Tika conf found");
+        }
     }
 
     /**
@@ -65,5 +78,13 @@ public enum Parser {
         }
         //something bad happened
         return null;
+    }
+
+    public static void main(String[] args) {
+        Parser parser = INSTANCE;
+
+        ByteArrayInputStream stream = new ByteArrayInputStream("Los Angeles".getBytes());
+        Pair<String, Metadata> pair = parser.parse(stream);
+        System.out.println(pair.getValue());
     }
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<properties>
+    <parsers>
+        <!-- Default Parser for most things, except for 2 mime types, and never
+             use the Executable Parser -->
+        <parser class="org.apache.tika.parser.DefaultParser">
+            <mime-exclude>image/jpeg</mime-exclude>
+            <mime-exclude>application/pdf</mime-exclude>
+            <parser-exclude class="org.apache.tika.parser.executable.ExecutableParser"/>
+        </parser>
+        <!-- Use a different parser for PDF -->
+        <parser class="org.apache.tika.parser.geo.topic.GeoParser">
+            <mime>text/plain</mime>
+            <mime>text/html</mime>
+            <mime>application/xhtml+xml</mime>
+            <mime>text/x-php</mime>
+            <mime>application/pdf</mime>
+            <mime>application/xml</mime>
+            <mime>application/atom+xml</mime>
+        </parser>
+    </parsers>
+</properties>
