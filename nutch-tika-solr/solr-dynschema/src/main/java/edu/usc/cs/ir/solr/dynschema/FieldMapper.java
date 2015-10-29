@@ -19,9 +19,9 @@ import java.util.Map;
  * @author Thamme Gowda
  * @since Oct. 27, 2015
  */
-public class FieldNameMapper {
+public class FieldMapper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FieldNameMapper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FieldMapper.class);
     public static final String SCHEMA_MAP_FILE = "solr-schema-map.json";
     public static final String KEY_OVERRIDES = "overrides";
     public static final String KEY_MULTI_VAL_SUFFIX = "multiValSuffix";
@@ -46,18 +46,19 @@ public class FieldNameMapper {
     public String multiValSuffix = DEFAULT_MULTI_VAL_SUFFIX;
     public final Map<String, String> overrides = new HashMap<>();
 
+    private StringEvaluator evaluator = new StringEvaluator();
     private boolean failOnError = true;
 
     /**
      * Creates a Field name mapper by readin rules from default config file {@code SCHEMA_MAP_FILE} in class loader
      * @throws RuntimeException when config is invalid
      */
-    public static FieldNameMapper create(){
-        try (InputStream stream = FieldNameMapper.class.getClassLoader().getResourceAsStream(SCHEMA_MAP_FILE)){
+    public static FieldMapper create(){
+        try (InputStream stream = FieldMapper.class.getClassLoader().getResourceAsStream(SCHEMA_MAP_FILE)){
             if (stream == null) {
                 throw new RuntimeException("Couldn't find config file in class path : " + SCHEMA_MAP_FILE);
             }
-            return new FieldNameMapper(stream);
+            return new FieldMapper(stream);
         } catch (IOException|ParseException e) {
             throw new RuntimeException(e);
         }
@@ -69,7 +70,7 @@ public class FieldNameMapper {
      * @throws IOException
      * @throws ParseException when the config is invalid
      */
-    public FieldNameMapper(InputStream jConfStream) throws IOException, ParseException {
+    public FieldMapper(InputStream jConfStream) throws IOException, ParseException {
         try (InputStreamReader reader = new InputStreamReader(jConfStream)) {
             Map jConf = (JSONObject) new JSONParser().parse(reader);
             if (jConf.containsKey(KEY_OVERRIDES)) {
@@ -141,6 +142,19 @@ public class FieldNameMapper {
             return fieldName;
         }
         return fieldName + suffix;
+    }
+
+
+    public Map<String, Object> mapFields(Map<String, Object> fields, boolean eval){
+        Map<String, Object> result = new HashMap<>();
+
+        fields.forEach((k,v) ->{
+            if (eval && evaluator.canEval(v)) {
+                v = evaluator.eval(v);
+            }
+            result.put(mapField(k, v), v);
+        });
+        return result;
     }
 
     public static void main(String[] args) throws ClassNotFoundException {

@@ -4,18 +4,17 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
 /**
  * Created by tg on 10/28/15.
  */
-public class FieldNameMapperTest {
+public class FieldMapperTest {
 
     @Test
     public void testMapField() throws Exception {
-        FieldNameMapper mapper = FieldNameMapper.create();
+        FieldMapper mapper = FieldMapper.create();
         //test override
         assertEquals("id", mapper.mapField("id", "xxxx"));
         //test types
