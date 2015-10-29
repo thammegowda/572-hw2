@@ -5,7 +5,10 @@
   <groupId>edu.usc.cs.ir.cwork</groupId>
   <artifactId>nutch-tika-solr</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <modules>
+    <module>solr-dynschema</module>
+  </modules>
+  <packaging>pom</packaging>
 
   <name>nutch-tika-solr</name>
   <url>http://sunset.usc.edu/classes/cs572_2015b/</url>
