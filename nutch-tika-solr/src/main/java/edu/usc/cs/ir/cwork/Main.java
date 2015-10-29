@@ -94,7 +94,7 @@ public class Main {
             while (recs.hasNext()) {
                 Pair<String, Content> rec = recs.next();
                 Content content = rec.getValue();
-                ContentBean bean = SolrUtil.createBean(content);
+                ContentBean bean = SolrUtil.createBean(content, true);
                 beans.add(bean);
                 count++;
                 if (beans.size() >= batchSize) {
@@ -145,6 +145,5 @@ public class Main {
         LOG.debug("Command={}", main.cmd.getName());
         main.cmd.run();
     }
-
 
 }
