@@ -1,5 +1,6 @@
 package edu.usc.cs.ir.cwork.tika;
 
+import edu.usc.cs.ir.tika.ner.corenlp.CoreNLPNERecogniser;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.nutch.protocol.Content;
@@ -7,6 +8,7 @@ import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.ner.NamedEntityParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,7 @@ public enum Parser {
         if (confFile != null) {
             LOG.info("Found tika conf at  {}", confFile);
             try {
+                System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, CoreNLPNERecogniser.class.getName());
                 TikaConfig config = new TikaConfig(confFile);
                 tika = new Tika(config);
             } catch (Exception e) {

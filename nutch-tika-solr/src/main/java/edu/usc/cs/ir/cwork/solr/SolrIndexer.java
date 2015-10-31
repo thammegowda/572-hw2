@@ -32,6 +32,7 @@ public class SolrIndexer implements Main.Command {
 
     public static final String MD_SUFFIX = "_md";
     private static Logger LOG = LoggerFactory.getLogger(SolrIndexer.class);
+    private static Set<String> TEXT_TYPES = new HashSet<>(Arrays.asList("html", "xhtml", "xml", "plain", "xhtml+xml"));
 
     @Option(name = "-segs", aliases = {"--seg-paths"},
             usage = "Path to a text file containing segment paths. One path per line",
@@ -45,7 +46,6 @@ public class SolrIndexer implements Main.Command {
     private Main context;
 
     public FieldMapper mapper = FieldMapper.create();
-
 
     public String getName() {
         return INDEX;
@@ -70,8 +70,9 @@ public class SolrIndexer implements Main.Command {
 
         Metadata metadata = content.getMetadata();
         if (reparse) {
-            Pair<String, org.apache.tika.metadata.Metadata> pair = Parser.INSTANCE.parse(content);
             try {
+                Pair<String, org.apache.tika.metadata.Metadata> pair = Parser.INSTANCE.parse(content);
+                bean.setContent(pair.getFirst());
                 org.apache.tika.metadata.Metadata tikaMd = pair.getSecond();
                 metadata = new Metadata();
                 for (String name : tikaMd.names()) {
@@ -86,6 +87,9 @@ public class SolrIndexer implements Main.Command {
                 LOG.info("Parse Failed for {} : {}. Msg:{}", content.getUrl(),
                         content.getContentType(), e.getMessage());
             }
+        } else if ("text".equals(bean.getMainType())
+                || TEXT_TYPES.contains(bean.getSubType().toLowerCase())){
+            bean.setContent(new String(content.getContent()));
         }
         String[] names = metadata.names();
         for (String name : names) {
@@ -98,11 +102,12 @@ public class SolrIndexer implements Main.Command {
 
         Map<String, Object> mappedMdFields = mapper.mapFields(mdFields, true);
         Map<String, Object> suffixedFields = new HashMap<>();
-        mappedMdFields.forEach((k,v) -> {
+        mappedMdFields.forEach((k, v) -> {
             if (!k.endsWith(MD_SUFFIX)) {
                 k += MD_SUFFIX;
             }
             suffixedFields.put(k, v);
+
         });
 
         bean.setMetadata(suffixedFields);
@@ -123,7 +128,7 @@ public class SolrIndexer implements Main.Command {
     }
 
     private void index(RecordIterator recs, SolrServer solr) throws IOException, SolrServerException {
-        int batchSize = 1000;
+        int batchSize = 10;
         List<ContentBean> beans = new ArrayList<>(batchSize);
         long st = System.currentTimeMillis();
         long count = 0;
@@ -132,12 +137,16 @@ public class SolrIndexer implements Main.Command {
         while (recs.hasNext()) {
             Pair<String, Content> rec = recs.next();
             Content content = rec.getValue();
-            ContentBean bean = createBean(content, false);
+            ContentBean bean = createBean(content, true);
             beans.add(bean);
             count++;
             if (beans.size() >= batchSize) {
-                solr.addBeans(beans);
-                beans.clear();
+                try {
+                    solr.addBeans(beans);
+                    beans.clear();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             if (System.currentTimeMillis() - st > delay) {

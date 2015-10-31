@@ -15,6 +15,8 @@ public class ContentBean {
     @Field("id")
     private String url;
 
+    @Field
+    private String content;
 
     @Field
     private String contentType;
@@ -75,5 +77,14 @@ public class ContentBean {
 
     public String getSubType() {
         return subType;
+    }
+
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }
