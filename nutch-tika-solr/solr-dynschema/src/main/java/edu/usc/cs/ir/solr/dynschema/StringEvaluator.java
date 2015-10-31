@@ -1,8 +1,13 @@
 package edu.usc.cs.ir.solr.dynschema;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 
 /**
@@ -11,6 +16,7 @@ import java.util.LinkedHashMap;
  */
 public class StringEvaluator {
 
+    private static final Logger LOG = LoggerFactory.getLogger(StringEvaluator.class);
 
     /**
      * Eval contract for evaluating string to {@code T} type object
@@ -33,10 +39,10 @@ public class StringEvaluator {
 
     public static String BOOL_REGEX = "(?i)^(true|false)$";
     public static String DOUBLE_REGEX = "^[+-]?\\d+(\\.\\d+)?([Ee][+-]\\d+)?$";
-    private static LinkedHashMap<String, Eval> evals = new LinkedHashMap<>();
+    private static   LinkedHashMap<String, Eval> evals = new LinkedHashMap<>();
     static {
         //regex  -> evaluator
-        evals.put(INT_REGEX, Integer::parseInt);
+        //evals.put(INT_REGEX, Integer::parseInt); //Let the long take it
         evals.put(LONG_REGEX, Long::parseLong);
         evals.put(BOOL_REGEX, Boolean::parseBoolean);
         evals.put(DOUBLE_REGEX, Double::parseDouble);
@@ -92,11 +98,22 @@ public class StringEvaluator {
             if (items.length < 1) {
                 return null;
             }
-            Object first = valueOf(items[0]);
-            Object[] result = (Object[]) Array.newInstance(first.getClass(), items.length);
-            result[0] = first;
-            for (int i = 1; i < items.length; i++) {
-                result[i] = valueOf(items[i]);
+            Collection result = new ArrayList<>();
+            Object first = null;
+            int idx = 0;
+            while(idx < items.length && (first = valueOf(items[idx++])) != null);
+            if (first != null) {
+                result.add(first);
+                for (; idx < items.length; idx++) {
+                    Object target = valueOf(items[idx]);
+                    if (target != null) {
+                        if (target.getClass().equals(first.getClass())) {
+                            result.add(target);
+                        } else {
+                            LOG.error("SKIPPED : Found Different types in same array {} {}", first.getClass(), target.getClass());
+                        }
+                    }
+                }
             }
             return result;
         } else {
