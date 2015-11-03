@@ -128,7 +128,7 @@ public class SolrIndexer implements Main.Command {
     }
 
     private void index(RecordIterator recs, SolrServer solr) throws IOException, SolrServerException {
-        int batchSize = 10;
+        int batchSize = 1000;
         List<ContentBean> beans = new ArrayList<>(batchSize);
         long st = System.currentTimeMillis();
         long count = 0;
