@@ -349,6 +349,15 @@
     <field name="mainType" type="string" stored="true" indexed="true"/>
     <field name="subType" type="string" stored="true" indexed="true"/>
 
+     <field name="persons" type="string" stored="true" indexed="true" multiValued="true"/>
+     <field name="persons_ts" type="text_general" stored="false" indexed="true" multiValued="true"/>
+     <field name="locations" type="string" stored="true" indexed="true" multiValued="true"/>
+     <field name="locations_ts" type="text_general" stored="false" indexed="true" multiValued="true"/>
+     <field name="organizations" type="string" stored="true" indexed="true" multiValued="true"/>
+     <field name="organizations_ts" type="text_general" stored="false" indexed="true" multiValued="true"/>
+     <field name="dates" type="date" stored="true" indexed="true" multiValued="true"/>
+
+
     <!-- Metadata fields -->
     <dynamicField name="*_s_md" type="string" indexed="true" stored="true"/>
     <dynamicField name="*_ss_md" type="string" indexed="true" stored="true" multiValued="true"/>
@@ -457,5 +466,10 @@
  <copyField source="title" dest="text"/>
  <copyField source="anchor" dest="text"/>
  <copyField source="author" dest="text"/>
+    <copyField source="persons" dest="text"/>
+    <copyField source="locations" dest="text"/>
+    <copyField source="dates" dest="text"/>
+    <copyField source="organizations" dest="text"/>
  <copyField source="latLon" dest="location"/>
+
 </schema>

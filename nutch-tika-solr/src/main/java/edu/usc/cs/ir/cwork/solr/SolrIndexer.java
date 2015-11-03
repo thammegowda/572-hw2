@@ -13,6 +13,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.tika.parser.ner.NERecogniser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.apache.tika.parser.ner.NERecogniser.*;
 
 /**
  * Created by tg on 10/29/15.
@@ -46,6 +50,7 @@ public class SolrIndexer implements Main.Command {
     private Main context;
 
     public FieldMapper mapper = FieldMapper.create();
+    private Parser parser;
 
     public String getName() {
         return INDEX;
@@ -71,7 +76,8 @@ public class SolrIndexer implements Main.Command {
         Metadata metadata = content.getMetadata();
         if (reparse) {
             try {
-                Pair<String, org.apache.tika.metadata.Metadata> pair = Parser.INSTANCE.parse(content);
+                parser = Parser.INSTANCE;
+                Pair<String, org.apache.tika.metadata.Metadata> pair =  parser.parse(content);
                 bean.setContent(pair.getFirst());
                 org.apache.tika.metadata.Metadata tikaMd = pair.getSecond();
                 metadata = new Metadata();
@@ -91,13 +97,31 @@ public class SolrIndexer implements Main.Command {
                 || TEXT_TYPES.contains(bean.getSubType().toLowerCase())){
             bean.setContent(new String(content.getContent()));
         }
-        String[] names = metadata.names();
-        for (String name : names) {
 
-            Serializable val = metadata.isMultiValued(name) ?
-                    metadata.getValues(name) :
-                    metadata.get(name);
-            mdFields.put(name, val);
+        for (String name : metadata.names()) {
+            boolean special = false;
+            if (name.startsWith("NER_"))  {
+                special = true; //could be special
+                String nameType = name.substring("NER_".length());
+                if (DATE.equals(nameType)) {
+                    Set<Date> dates = parser.parseDates(metadata.getValues(name));
+                    bean.setDates(dates);
+                } else if (PERSON.equals(nameType)){
+                    bean.setPersons(asSet(metadata.getValues(name)));
+                } else if (ORGANIZATION.equals(nameType)) {
+                    bean.setOrganizations(asSet(metadata.getValues(name)));
+                } else if (LOCATION.equals(nameType)) {
+                    bean.setLocations(asSet(metadata.getValues(name)));
+                } else {
+                    //no special casing this field!!
+                    special = false;
+                }
+            }
+
+            if (!special) {
+                mdFields.put(name, metadata.isMultiValued(name)
+                        ? metadata.getValues(name) : metadata.get(name));
+            }
         }
 
         Map<String, Object> mappedMdFields = mapper.mapFields(mdFields, true);
@@ -107,13 +131,30 @@ public class SolrIndexer implements Main.Command {
                 k += MD_SUFFIX;
             }
             suffixedFields.put(k, v);
-
         });
 
         bean.setMetadata(suffixedFields);
         return bean;
     }
 
+    /**
+     * Converts an array into set
+     * @param items array of items
+     * @param <T>
+     * @return set created from array
+     */
+    public static <T>  Set<T> asSet(T...items) {
+        HashSet<T> set = new HashSet<>();
+        Collections.addAll(set, items);
+        return set;
+    }
+
+    /**
+     * runs the solr index command
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws SolrServerException
+     */
     public void run() throws IOException, InterruptedException, SolrServerException {
 
         SolrServer solr = new HttpSolrServer(solrUrl.toString());

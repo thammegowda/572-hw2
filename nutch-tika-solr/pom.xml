@@ -27,6 +27,7 @@
         <slf4j.version>1.7.12</slf4j.version>
         <hadoop.version>2.7.1</hadoop.version>
         <corenlp.version>3.5.2</corenlp.version>
+        <natty.version>0.12</natty.version>
     </properties>
 
     <dependencies>
@@ -83,6 +84,13 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- This one parses dates-->
+        <dependency>
+            <groupId>com.joestelmach</groupId>
+            <artifactId>natty</artifactId>
+            <version>${natty.version}</version>
+        </dependency>
+
     </dependencies>
     <developers>
         <developer>

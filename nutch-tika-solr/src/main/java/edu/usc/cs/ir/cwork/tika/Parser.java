@@ -1,5 +1,6 @@
 package edu.usc.cs.ir.cwork.tika;
 
+import com.joestelmach.natty.DateGroup;
 import edu.usc.cs.ir.tika.ner.corenlp.CoreNLPNERecogniser;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.math3.util.Pair;
@@ -15,6 +16,10 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by tg on 10/25/15.
@@ -25,8 +30,10 @@ public enum Parser {
     public final Logger LOG = LoggerFactory.getLogger(Parser.class);
 
     private Tika tika;
+    private com.joestelmach.natty.Parser nattyParser;
 
     Parser() {
+        nattyParser = new com.joestelmach.natty.Parser();
         URL confFile = getClass().getClassLoader().getResource("tika-config.xml");
         if (confFile != null) {
             LOG.info("Found tika conf at  {}", confFile);
@@ -83,11 +90,32 @@ public enum Parser {
         return null;
     }
 
+    public  Set<Date> parseDates(String...values) {
+        Set<Date> result = new HashSet<>();
+        for (String value : values) {
+            if (value == null) {
+                continue;
+            }
+            List<DateGroup> groups;
+            synchronized (this) {
+                groups = nattyParser.parse(value);
+            }
+            if (groups != null) {
+                for (DateGroup group : groups) {
+                    List<Date> dates = group.getDates();
+                    if (dates != null) {
+                        result.addAll(dates);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public static void main(String[] args) {
         Parser parser = INSTANCE;
 
-        ByteArrayInputStream stream = new ByteArrayInputStream("Los Angeles".getBytes());
-        Pair<String, Metadata> pair = parser.parse(stream);
-        System.out.println(pair.getValue());
+        Set<Date> dates = parser.parseDates("August 1st 2015", "February", "February 2015", "15th february 2016");
+        System.out.println(dates);
     }
 }
