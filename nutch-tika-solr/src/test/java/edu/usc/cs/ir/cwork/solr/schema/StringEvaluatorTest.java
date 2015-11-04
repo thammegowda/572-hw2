@@ -1,8 +1,8 @@
-package edu.usc.cs.ir.solr.dynschema;
+package edu.usc.cs.ir.cwork.solr.schema;
 
 import org.junit.Test;
 
-import java.util.Date;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
@@ -14,7 +14,7 @@ public class StringEvaluatorTest {
     @Test
     public void testValuate() throws Exception {
         StringEvaluator valuator = new StringEvaluator();
-        assertEquals(1234, valuator.valueOf("1234"));
+        assertEquals(1234L, valuator.valueOf("1234"));
         long l = (long)Integer.MAX_VALUE + 1;
         assertEquals(l, valuator.valueOf(l + ""));
 
@@ -48,8 +48,10 @@ public class StringEvaluatorTest {
     public void testEval() throws Exception {
         StringEvaluator valuator = new StringEvaluator();
 
-        assertEquals(1, valuator.eval("1"));
-        assertArrayEquals(new Object[]{1, 2}, (Object[]) valuator.eval(new String[]{"1", "2"}));
+        assertEquals(1L, valuator.eval("1"));
+        Object result = valuator.eval(new String[]{"1", "2"});
+        System.out.println(result);
+        assertEquals(Arrays.asList(1L, 2L), result);
         assertEquals(1.1, valuator.eval("1.1"));
         assertEquals(true, valuator.eval("true"));
     }

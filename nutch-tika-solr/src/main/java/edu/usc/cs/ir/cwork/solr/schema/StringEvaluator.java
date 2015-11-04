@@ -1,12 +1,10 @@
-package edu.usc.cs.ir.solr.dynschema;
+package edu.usc.cs.ir.cwork.solr.schema;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 
@@ -101,7 +99,7 @@ public class StringEvaluator {
             Collection result = new ArrayList<>();
             Object first = null;
             int idx = 0;
-            while(idx < items.length && (first = valueOf(items[idx++])) != null);
+            while(idx < items.length && (first = valueOf(items[idx++])) == null);
             if (first != null) {
                 result.add(first);
                 for (; idx < items.length; idx++) {

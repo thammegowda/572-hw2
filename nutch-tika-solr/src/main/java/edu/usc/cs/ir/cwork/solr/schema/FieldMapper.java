@@ -1,4 +1,4 @@
-package edu.usc.cs.ir.solr.dynschema;
+package edu.usc.cs.ir.cwork.solr.schema;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

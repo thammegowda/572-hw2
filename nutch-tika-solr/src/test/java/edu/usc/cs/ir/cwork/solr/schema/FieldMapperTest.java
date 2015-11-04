@@ -1,10 +1,9 @@
-package edu.usc.cs.ir.solr.dynschema;
+package edu.usc.cs.ir.cwork.solr.schema;
 
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
-
 import static org.junit.Assert.*;
 
 /**
