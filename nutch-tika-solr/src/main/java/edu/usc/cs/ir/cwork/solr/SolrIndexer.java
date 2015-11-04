@@ -3,8 +3,8 @@ package edu.usc.cs.ir.cwork.solr;
 import edu.usc.cs.ir.cwork.Main;
 import edu.usc.cs.ir.cwork.nutch.RecordIterator;
 import edu.usc.cs.ir.cwork.nutch.SegContentReader;
+import edu.usc.cs.ir.cwork.solr.schema.FieldMapper;
 import edu.usc.cs.ir.cwork.tika.Parser;
-import edu.usc.cs.ir.solr.dynschema.FieldMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.nutch.metadata.Metadata;
@@ -13,7 +13,6 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
-import org.apache.tika.parser.ner.NERecogniser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,10 +20,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.apache.tika.parser.ner.NERecogniser.*;
 
@@ -98,30 +95,34 @@ public class SolrIndexer implements Main.Command {
             bean.setContent(new String(content.getContent()));
         }
 
-        for (String name : metadata.names()) {
-            boolean special = false;
-            if (name.startsWith("NER_"))  {
-                special = true; //could be special
-                String nameType = name.substring("NER_".length());
-                if (DATE.equals(nameType)) {
-                    Set<Date> dates = parser.parseDates(metadata.getValues(name));
-                    bean.setDates(dates);
-                } else if (PERSON.equals(nameType)){
-                    bean.setPersons(asSet(metadata.getValues(name)));
-                } else if (ORGANIZATION.equals(nameType)) {
-                    bean.setOrganizations(asSet(metadata.getValues(name)));
-                } else if (LOCATION.equals(nameType)) {
-                    bean.setLocations(asSet(metadata.getValues(name)));
-                } else {
-                    //no special casing this field!!
-                    special = false;
+        try {
+            for (String name : metadata.names()) {
+                boolean special = false;
+                if (name.startsWith("NER_"))  {
+                    special = true; //could be special
+                    String nameType = name.substring("NER_".length());
+                    if (DATE.equals(nameType)) {
+                        Set<Date> dates = parser.parseDates(metadata.getValues(name));
+                        bean.setDates(dates);
+                    } else if (PERSON.equals(nameType)){
+                        bean.setPersons(asSet(metadata.getValues(name)));
+                    } else if (ORGANIZATION.equals(nameType)) {
+                        bean.setOrganizations(asSet(metadata.getValues(name)));
+                    } else if (LOCATION.equals(nameType)) {
+                        bean.setLocations(asSet(metadata.getValues(name)));
+                    } else {
+                        //no special casing this field!!
+                        special = false;
+                    }
+                }
+
+                if (!special) {
+                    mdFields.put(name, metadata.isMultiValued(name)
+                            ? metadata.getValues(name) : metadata.get(name));
                 }
             }
-
-            if (!special) {
-                mdFields.put(name, metadata.isMultiValued(name)
-                        ? metadata.getValues(name) : metadata.get(name));
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         Map<String, Object> mappedMdFields = mapper.mapFields(mdFields, true);
@@ -169,7 +170,7 @@ public class SolrIndexer implements Main.Command {
     }
 
     private void index(RecordIterator recs, SolrServer solr) throws IOException, SolrServerException {
-        int batchSize = 1000;
+        int batchSize = 10;
         List<ContentBean> beans = new ArrayList<>(batchSize);
         long st = System.currentTimeMillis();
         long count = 0;
