@@ -13,6 +13,8 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +28,10 @@ import java.util.*;
 import static org.apache.tika.parser.ner.NERecogniser.*;
 
 /**
- * Created by tg on 10/29/15.
+ * This class accepts CLI args containing paths to Nutch segments and solr Url,
+ * then runs the index operation optionally reparsing the metadata.
  */
-public class SolrIndexer implements Main.Command {
-
+public class SolrIndexer {
 
     public static final String MD_SUFFIX = "_md";
     private static Logger LOG = LoggerFactory.getLogger(SolrIndexer.class);
@@ -40,19 +42,21 @@ public class SolrIndexer implements Main.Command {
             required = true)
     private File segsFile;
 
+
     @Option(name = "-url", aliases = {"--solr-url"},
             usage = "Solr url", required = true)
     private URL solrUrl;
 
-    private Main context;
+    private boolean reparse = true;
+
+
+    @Option(name = "-batch", aliases = {"--batch-size"},
+            usage = "Number of documents to buffer and post to solr",
+            required = false)
+    private int batchSize = 1000;
 
     public FieldMapper mapper = FieldMapper.create();
     private Parser parser;
-
-    public String getName() {
-        return INDEX;
-    }
-
 
     /**
      * Creates Solrj Bean from nutch content
@@ -170,7 +174,6 @@ public class SolrIndexer implements Main.Command {
     }
 
     private void index(RecordIterator recs, SolrServer solr) throws IOException, SolrServerException {
-        int batchSize = 10;
         List<ContentBean> beans = new ArrayList<>(batchSize);
         long st = System.currentTimeMillis();
         long count = 0;
@@ -179,7 +182,7 @@ public class SolrIndexer implements Main.Command {
         while (recs.hasNext()) {
             Pair<String, Content> rec = recs.next();
             Content content = rec.getValue();
-            ContentBean bean = createBean(content, true);
+            ContentBean bean = createBean(content, reparse);
             beans.add(bean);
             count++;
             if (beans.size() >= batchSize) {
@@ -206,5 +209,19 @@ public class SolrIndexer implements Main.Command {
         Main.LOG.info("Committing before exit. Num Docs = {}", count);
         UpdateResponse response = solr.commit();
         Main.LOG.info("Commit response : {}", response);
+    }
+
+    public static void main(String[] args) throws InterruptedException, SolrServerException, IOException {
+        SolrIndexer indexer = new SolrIndexer();
+        CmdLineParser cmdLineParser = new CmdLineParser(indexer);
+        try {
+            cmdLineParser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            cmdLineParser.printUsage(System.out);
+            return;
+        }
+        indexer.run();
+        System.out.println("Done");
     }
 }

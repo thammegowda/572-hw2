@@ -1,64 +1,74 @@
 package edu.usc.cs.ir.cwork;
 
 import edu.usc.cs.ir.cwork.solr.SolrIndexer;
-import org.kohsuke.args4j.Argument;
+import net.didion.jwnl.data.Exc;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.spi.SubCommand;
-import org.kohsuke.args4j.spi.SubCommandHandler;
-import org.kohsuke.args4j.spi.SubCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintStream;
+
 /**
- * Created by tg on 10/25/15.
+ * This class offers CLI interface for the project
  */
 public class Main {
 
     public static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    public interface Command {
+    /**
+     * Enumerate all the known sub-commands
+     */
+    private enum Cmd {
+        index("Index nutch segments to solr");
 
-        String INDEX = "index";
-        String STATS = "stats";
+        private final String description;
 
-        String getName();
+        Cmd(String description) {
+            this.description = description;
+        }
 
-        void run() throws Exception;
+        public String getDescription() {
+            return description;
+        }
     }
 
-    @Argument(handler = SubCommandHandler.class, required = true,
-    usage = "sub-command")
-    @SubCommands({
-            @SubCommand(name=Command.INDEX, impl = SolrIndexer.class),
-            @SubCommand(name=Command.STATS, impl = Stats.class),
-    })
-    private Command cmd;
-
-    public static class Stats implements Command {
-
-        public String getName() {
-            return STATS;
+    public static Cmd getCommand(String cmdName) {
+        try {
+            return Cmd.valueOf(cmdName);
+        } catch (Exception e) {
+            System.err.println("Unknown command " + cmdName);
+            printUsage(System.err);
+            System.exit(2);
+            throw new IllegalArgumentException("Unknown command " + cmdName);
         }
+    }
 
-        public void run() {
-            throw new RuntimeException("Not implemented");
+    public static void printUsage(PrintStream out){
+        out.println("Usage : Main <CMD>");
+        out.println("The following command(CMD)s are available");
+        for (Cmd cmd : Cmd.values()) {
+            out.print("\t" + cmd.name() + " : " + cmd.getDescription());
         }
+        out.flush();
     }
 
     public static void main(String[] args) throws Exception {
-        args = "index -segs data/paths-all.txt -url http://localhost:8983/solr".split(" ");
-        Main main = new Main();
-        CmdLineParser parser = new CmdLineParser(main);
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            parser.printUsage(System.out);
-            System.err.println(e.getMessage());
-            return;
+        //args = "index -segs data/paths.txt -url http://localhost:8983/solr".split(" ");
+        if (args.length == 0) {
+            printUsage(System.out);
+            System.exit(1);
         }
-        LOG.debug("Command={}", main.cmd.getName());
-        main.cmd.run();
+        Cmd cmd = getCommand(args[0]);  // the first argument has to be positional parma
+        String subCmdArgs[] = new String[args.length-1];
+        System.arraycopy(args, 1, subCmdArgs, 0, args.length - 1);
+        switch (cmd) {
+            case index:
+                SolrIndexer.main(subCmdArgs);
+                break;
+            default:
+                throw new IllegalStateException(cmd.name() + " : not implemented");
+        }
     }
 
 }
