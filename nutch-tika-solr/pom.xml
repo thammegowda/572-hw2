@@ -5,10 +5,7 @@
     <groupId>edu.usc.cs.ir.cwork</groupId>
     <artifactId>nutch-tika-solr</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <modules>
-        <module>solr-dynschema</module>
-    </modules>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <name>nutch-tika-solr</name>
     <url>http://sunset.usc.edu/classes/cs572_2015b/</url>
@@ -28,39 +25,62 @@
         <hadoop.version>2.7.1</hadoop.version>
         <corenlp.version>3.5.2</corenlp.version>
         <natty.version>0.12</natty.version>
+        <exec.mainClass>edu.usc.cs.ir.cwork.Main</exec.mainClass>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers</artifactId>
-            <version>${tika.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>edu.usc.cs.ir.cwork</groupId>
-            <artifactId>solr-dynschema</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>edu.usc.ir.tika</groupId>
-            <artifactId>tika-ner-corenlp</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parsers</artifactId>
+            <version>${tika.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.usc.ir.tika</groupId>
+            <artifactId>tika-ner-corenlp</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+
+        <dependency>
             <groupId>org.apache.nutch</groupId>
             <artifactId>nutch</artifactId>
             <version>${nutch.version}</version>
+            <exclusions>
+                <!-- it was failing for some reason -->
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-frontend-jaxws</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-transports-http</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-transports-http-jetty</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
         <dependency>
             <groupId>args4j</groupId>
             <artifactId>args4j</artifactId>
             <version>${args4j.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
