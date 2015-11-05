@@ -50,6 +50,7 @@ public class Main {
         for (Cmd cmd : Cmd.values()) {
             out.print("\t" + cmd.name() + " : " + cmd.getDescription());
         }
+        out.println();
         out.flush();
     }
 

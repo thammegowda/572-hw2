@@ -9,12 +9,15 @@ import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ner.NamedEntityParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
@@ -88,6 +91,20 @@ public enum Parser {
         }
         //something bad happened
         return null;
+    }
+
+
+    /**
+     * Parses the URL content
+     * @param url
+     * @return
+     * @throws IOException
+     */
+    public Pair<String, Metadata> parse(URL url) throws IOException, TikaException {
+        Metadata metadata = new Metadata();
+        try (InputStream stream = url.openStream()) {
+                return new Pair<>(tika.parseToString(stream, metadata), metadata);
+        }
     }
 
     public  Set<Date> parseDates(String...values) {

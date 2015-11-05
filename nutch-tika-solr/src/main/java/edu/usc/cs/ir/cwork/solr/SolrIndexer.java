@@ -211,7 +211,8 @@ public class SolrIndexer {
         Main.LOG.info("Commit response : {}", response);
     }
 
-    public static void main(String[] args) throws InterruptedException, SolrServerException, IOException {
+    public static void main(String[] args) throws InterruptedException,
+            SolrServerException, IOException {
         SolrIndexer indexer = new SolrIndexer();
         CmdLineParser cmdLineParser = new CmdLineParser(indexer);
         try {
