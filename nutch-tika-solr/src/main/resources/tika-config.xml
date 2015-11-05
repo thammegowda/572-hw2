@@ -10,7 +10,7 @@
             <parser-exclude class="org.apache.tika.parser.executable.ExecutableParser"/>
         </parser>
 
-       <parser class="org.apache.tika.parser.geo.topic.GeoParser">
+	<!--<parser class="org.apache.tika.parser.geo.topic.GeoParser">
            <mime>text/plain</mime>
            <mime>text/html</mime>
            <mime>text/x-php</mime>
@@ -25,6 +25,7 @@
            <mime>application/msword</mime>
            <mime>text/asp</mime>
        </parser>
+	-->
 
         <parser class="org.apache.tika.parser.ner.NamedEntityParser">
             <mime>text/plain</mime>
