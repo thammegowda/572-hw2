@@ -28,7 +28,37 @@ so the following setup is necessary prior to building this project.
 # How to build.
 
 After completing the _Additional Setup_ process, the build is as simple as
-+  `mvn exec:java -Dexec.args=`
++ `mvn exec:java -Dexec.args=` to run
++ `mvn clean package assembly:single` to package
+
+
+# How to run
+
+This project offers sub commands.
+
+  ```
+  Usage : Main <CMD>
+  The following command(CMD)s are available
+          index : Index nutch segments to solr
+  ```
+
+  + **index** Command
+
+  Usage :
+  ```
+  java -jar target/nutch-tika-solr-1.0-SNAPSHOT-jar-with-dependencies.jar index
+  Option "-segs (--seg-paths)" is required
+   -batch (--batch-size) N  : Number of documents to buffer and post to solr
+                              (default: 1000)
+   -segs (--seg-paths) FILE : Path to a text file containing segment paths. One
+                              path per line
+   -url (--solr-url) URL    : Solr url
+  ```
+
+  Example :
+  ```
+  java -jar target/nutch-tika-solr-1.0-SNAPSHOT-jar-with-dependencies.jar index -batch 300 -segs data/paths-all.txt -url http://localhost:8983/solr
+  ```
 
 //FIXME: update this
 
