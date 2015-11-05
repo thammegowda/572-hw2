@@ -30,6 +30,8 @@ public class PageRanker {
         Set<Vertex> vertices = graph.getVertices();
         int n = vertices.size();
 
+        double baseLine = (1 - dampingFactor)/n;
+
         long st = System.currentTimeMillis();
         int delay = 2 * 1000;
         for (int iteration = 0; iteration < numIterations; iteration++) {
@@ -37,12 +39,10 @@ public class PageRanker {
 
             Map<String, Double> scores = new HashMap<>();
             for (Vertex thisVtx : vertices) {
-                double sum = 0;
-
-                for (Vertex vertex : thisVtx.getEdges()) {
-                    sum += vertex.getScore() / vertex.getEdges().size();
-                }
-                double pageRank = (1 - dampingFactor)/n + dampingFactor * sum;
+                Double sum = thisVtx.getEdges().stream()
+                        .map(v -> v.getScore() / v.getEdges().size())
+                        .reduce(0.0, (f1, f2) -> f1 + f2);
+                double pageRank = baseLine + dampingFactor * sum;
 
                 //thisVtx.setScore(pageRank); //Updated at the end of iteration
                 scores.put(thisVtx.getId(), pageRank);
@@ -53,9 +53,7 @@ public class PageRanker {
                     st = System.currentTimeMillis();
                 }
             }
-            for (Vertex vertice : vertices) {
-                vertice.setScore(scores.get(vertice.getId()));
-            }
+            vertices.forEach(v -> v.setScore(scores.get(v.getId())));
             if (debug) {
                 System.out.println("\nIteration " + iteration + " complete.");
                 printPageRanks(graph);
