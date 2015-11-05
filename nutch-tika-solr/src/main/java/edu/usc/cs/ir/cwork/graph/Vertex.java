@@ -43,13 +43,23 @@ public class Vertex {
     }
 
     public void addUndirectedEdge(Vertex vertex) {
+        if (this.equals(vertex)) {
+            return; //skipped
+        }
         //undirected edge
         this.edges.add(vertex);
         vertex.edges.add(this);
     }
 
     public void setEdges(Set<Vertex> edges) {
-        this.edges = edges;
+        if (this.edges == null ) {
+            this.edges = new HashSet<>();
+        } else {
+            this.edges.clear();
+        }
+        for (Vertex vertex : edges) {
+            this.addUndirectedEdge(vertex);
+        }
     }
 
     @Override
