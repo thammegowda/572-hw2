@@ -8,6 +8,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.nutch.protocol.Content;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +21,7 @@ import java.util.List;
 /**
  * Created by tg on 10/25/15.
  */
-public class RecordIterator implements Iterator<Pair<String, Content>> {
+public class RecordIterator<T extends Writable> implements Iterator<Pair<String, T>> {
 
     public static final Logger LOG = LoggerFactory.getLogger(RecordIterator.class);
 
@@ -30,11 +32,12 @@ public class RecordIterator implements Iterator<Pair<String, Content>> {
     private long errorCount = 0;
 
     private SequenceFile.Reader reader;
-    private Pair<String, Content> next;
+    private Pair<String, T> next;
     private Text key = new Text(); // reused
-    private Content value; // not re used, so created when needed
+    private T value; // not re used, so created when needed
 
     public RecordIterator(List<Path> paths) {
+        LOG.info("Creating iterator for {} parts", paths.size());
         this.paths = paths.iterator();
         this.conf = Context.getInstance().getConf();
         this.fs = Context.getInstance().getFs();
@@ -47,15 +50,16 @@ public class RecordIterator implements Iterator<Pair<String, Content>> {
     }
 
     @Override
-    public Pair<String, Content> next() {
-        Pair<String, Content> tmp = next;
+    public Pair<String, T> next() {
+        Pair<String, T> tmp = next;
         next = this.getNext();
         return tmp;
     }
 
-    private Pair<String, Content> getNext() {
+    private Pair<String, T> getNext() {
         if (reader != null ) {
-            value = new Content();
+            value = ReflectionUtils.newInstance((Class<T>) reader.getValueClass(), conf);
+            //value = new Content();
             try {
                 if (reader.next(key, value)) {
                     count++;
