@@ -12,6 +12,10 @@ public class Vertex {
     private double score;
     private Set<Vertex> edges;
 
+    public Vertex(String id) {
+        this(id, 0.0);
+    }
+
     public Vertex(String id, double score) {
         this(id, score, new HashSet<>());
     }

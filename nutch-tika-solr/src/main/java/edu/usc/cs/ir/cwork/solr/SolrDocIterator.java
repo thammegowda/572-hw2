@@ -1,0 +1,98 @@
+package edu.usc.cs.ir.cwork.solr;
+
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+
+/**
+ * Created by tg on 11/5/15.
+ */
+public class SolrDocIterator implements Iterator<SolrDocument> {
+
+    public static final Logger LOG = LoggerFactory.getLogger(SolrDocIterator.class);
+    private SolrServer solr;
+
+    private SolrQuery query;
+    private long numFound;
+    private int nextStart;
+    private Iterator<SolrDocument> curPage;
+    private SolrDocument next;
+
+    public SolrDocIterator(String solrUrl, String queryStr, int start, int rows,
+                           String...fields){
+        this.solr = new HttpSolrServer(solrUrl);
+        this.nextStart = start;
+        this.query = new SolrQuery(queryStr);
+        this.query.setRows(rows);
+        if (fields.length > 0) {
+            this.query.setFields(fields);
+        }
+        this.numFound = start + 1;
+
+        //lets assume at least one more doc left, so the next page call wil happen
+        this.next = getNext(true);
+    }
+
+    public void setFields(String...fields) {
+        this.query.setFields(fields);
+    }
+
+    public long getNumFound() {
+        return numFound;
+    }
+
+    public int getNextStart() {
+        return nextStart;
+    }
+
+    public SolrDocumentList queryNext()  {
+        query.setStart(nextStart);
+        try {
+            LOG.info("Query, Start = {}", nextStart);
+            QueryResponse response = solr.query(query);
+            this.numFound = response.getResults().getNumFound();
+            return response.getResults();
+        } catch (SolrServerException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean hasNext() {
+        return next != null;
+    }
+
+    @Override
+    public SolrDocument next() {
+        SolrDocument tmp = next;
+        next = getNext(false);
+        return tmp;
+    }
+
+    private SolrDocument getNext(boolean forceFetch) {
+        if (forceFetch || !curPage.hasNext() && nextStart < numFound) {
+            //there is more
+            SolrDocumentList page = queryNext();
+            this.numFound = page.getNumFound();
+            this.nextStart += page.size();
+            this.curPage = page.iterator();
+        }
+        return curPage.hasNext() ? curPage.next() : null;
+    }
+
+    public static void main(String[] args) {
+        SolrDocIterator iterator = new SolrDocIterator("http://localhost:8983/solr/", "*:*", 0, 100, "id");
+
+        while (iterator.hasNext()){
+            System.out.println(iterator.next());
+        }
+    }
+}
