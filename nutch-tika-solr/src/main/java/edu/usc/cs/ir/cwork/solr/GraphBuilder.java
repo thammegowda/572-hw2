@@ -2,6 +2,7 @@ package edu.usc.cs.ir.cwork.solr;
 
 import edu.usc.cs.ir.cwork.graph.Graph;
 import edu.usc.cs.ir.cwork.graph.Vertex;
+import edu.usc.cs.ir.cwork.relevance.PageRanker;
 import org.apache.solr.common.SolrDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class GraphBuilder {
 
     public Graph build(){
         Map<Object, Set<Vertex>> edges = new HashMap<>();
-        //Set<Vertex> allVertices = new HashSet<>();
+        Set<Vertex> allVertices = new HashSet<>();
         long count = 0;
         long st = System.currentTimeMillis();
 
@@ -69,7 +70,7 @@ public class GraphBuilder {
                 //just add
                 vertices.add(thisVertex);
 
-                //allVertices.add(thisVertex);
+                allVertices.add(thisVertex);
             }
             count++;
             if (System.currentTimeMillis() - st > INTERACTIVE_DELAY) {
@@ -78,8 +79,7 @@ public class GraphBuilder {
             }
         }
         LOG.info("Completed scanning edges, total vertices = {}", count);
-       // return new Graph(fieldName, allVertices);
-        return null;
+        return new Graph(fieldName, allVertices);
     }
 
 
@@ -90,12 +90,18 @@ public class GraphBuilder {
     public static void main(String[] args) {
 
         SolrDocIterator iterator = new SolrDocIterator("http://localhost:8983/solr",
-                "locations:*", 0, 1000, "id", "locations");
+                "locations:*", 0, 100, "id", "locations");
+
+        iterator.setLimit(50);
         System.out.println("Found " + iterator.getNumFound() + " docs");
 
         GraphBuilder builder  = new GraphBuilder(iterator, "locations");
         builder.setIgnoreEdges(new HashSet<>(Arrays.asList("Etc")));
         Graph graph = builder.build();
+        PageRanker ranker = new PageRanker();
+        ranker.setDebug(true);
+        ranker.rank(graph, 10, 0.5);
+        //ranker.printPageRanks(graph);
         System.out.println("Done");
 
     }

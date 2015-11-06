@@ -25,6 +25,8 @@ public class SolrDocIterator implements Iterator<SolrDocument> {
     private int nextStart;
     private Iterator<SolrDocument> curPage;
     private SolrDocument next;
+    private long count = 0;
+    private long limit = Long.MAX_VALUE;
 
     public SolrDocIterator(String solrUrl, String queryStr, int start, int rows,
                            String...fields){
@@ -39,6 +41,7 @@ public class SolrDocIterator implements Iterator<SolrDocument> {
 
         //lets assume at least one more doc left, so the next page call wil happen
         this.next = getNext(true);
+        this.count = 1;
     }
 
     public void setFields(String...fields) {
@@ -51,6 +54,11 @@ public class SolrDocIterator implements Iterator<SolrDocument> {
 
     public int getNextStart() {
         return nextStart;
+    }
+
+
+    public void setLimit(long limit) {
+        this.limit = limit;
     }
 
     public SolrDocumentList queryNext()  {
@@ -74,6 +82,7 @@ public class SolrDocIterator implements Iterator<SolrDocument> {
     public SolrDocument next() {
         SolrDocument tmp = next;
         next = getNext(false);
+        count++;
         return tmp;
     }
 
@@ -85,14 +94,18 @@ public class SolrDocIterator implements Iterator<SolrDocument> {
             this.nextStart += page.size();
             this.curPage = page.iterator();
         }
-        return curPage.hasNext() ? curPage.next() : null;
+        return count < limit && curPage.hasNext() ? curPage.next() : null;
     }
 
     public static void main(String[] args) {
-        SolrDocIterator iterator = new SolrDocIterator("http://localhost:8983/solr/", "*:*", 0, 100, "id");
+        SolrDocIterator iterator = new SolrDocIterator("http://localhost:8983/solr/", "subType:xml", 0, 100, "id");
+        iterator.setLimit(10);
 
+        int c = 0;
         while (iterator.hasNext()){
             System.out.println(iterator.next());
+            c++;
         }
+        System.out.println(c);
     }
 }
