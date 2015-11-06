@@ -1,1 +1,8 @@
 /Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20150920210656/content
+/Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20150920210745/content
+/Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20150920212502/content
+/Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20150921003734/content
+/Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20151005040803/content
+/Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20151005040823/content
+/Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20151005042154/content
+/Users/nmante/Documents/Classes/CSCI572/Homework/Homework2/hw1_crawl/segments/20151005075805/content
