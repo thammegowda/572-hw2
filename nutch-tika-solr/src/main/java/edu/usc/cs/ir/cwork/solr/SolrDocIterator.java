@@ -18,6 +18,8 @@ import java.util.Iterator;
 public class SolrDocIterator implements Iterator<SolrDocument> {
 
     public static final Logger LOG = LoggerFactory.getLogger(SolrDocIterator.class);
+    public static final int DEF_START = 0;
+    public static final int DEF_ROWS = 1000;
     private SolrServer solr;
 
     private SolrQuery query;
@@ -30,7 +32,16 @@ public class SolrDocIterator implements Iterator<SolrDocument> {
 
     public SolrDocIterator(String solrUrl, String queryStr, int start, int rows,
                            String...fields){
-        this.solr = new HttpSolrServer(solrUrl);
+        this(new HttpSolrServer(solrUrl), queryStr, start, rows, fields);
+    }
+
+    public SolrDocIterator(SolrServer solr, String queryStr, String...fields) {
+        this(solr, queryStr, DEF_START, DEF_ROWS, fields);
+    }
+
+        public SolrDocIterator(SolrServer solr, String queryStr, int start, int rows,
+                           String...fields){
+        this.solr = solr;
         this.nextStart = start;
         this.query = new SolrQuery(queryStr);
         this.query.setRows(rows);
@@ -64,7 +75,7 @@ public class SolrDocIterator implements Iterator<SolrDocument> {
     public SolrDocumentList queryNext()  {
         query.setStart(nextStart);
         try {
-            LOG.info("Query, Start = {}", nextStart);
+            LOG.debug("Query {}, Start = {}", query.getQuery(), nextStart);
             QueryResponse response = solr.query(query);
             this.numFound = response.getResults().getNumFound();
             return response.getResults();
