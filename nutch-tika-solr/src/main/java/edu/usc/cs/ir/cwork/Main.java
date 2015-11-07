@@ -1,9 +1,8 @@
 package edu.usc.cs.ir.cwork;
 
+import edu.usc.cs.ir.cwork.relevance.GraphGenerator;
+import edu.usc.cs.ir.cwork.relevance.SparkPageRanker;
 import edu.usc.cs.ir.cwork.solr.SolrIndexer;
-import net.didion.jwnl.data.Exc;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,9 @@ public class Main {
      * Enumerate all the known sub-commands
      */
     private enum Cmd {
-        index("Index nutch segments to solr");
+        index("Index nutch segments to solr"),
+        graph("Builds a graph of documents, and writes the edges set to file "),
+        pagerank("Computes page rank for nodes in graph");
 
         private final String description;
 
@@ -48,7 +49,8 @@ public class Main {
         out.println("Usage : Main <CMD>");
         out.println("The following command(CMD)s are available");
         for (Cmd cmd : Cmd.values()) {
-            out.print("\t" + cmd.name() + " : " + cmd.getDescription());
+            out.printf("%12s :  %s", cmd.name(), cmd.getDescription());
+            out.println();
         }
         out.println();
         out.flush();
@@ -66,6 +68,12 @@ public class Main {
         switch (cmd) {
             case index:
                 SolrIndexer.main(subCmdArgs);
+                break;
+            case graph:
+                GraphGenerator.main(subCmdArgs);
+                break;
+            case pagerank:
+                SparkPageRanker.main(subCmdArgs);
                 break;
             default:
                 throw new IllegalStateException(cmd.name() + " : not implemented");
