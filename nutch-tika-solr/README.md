@@ -27,27 +27,32 @@ so the following setup is necessary prior to building this project.
 
 # How to build.
 
-After completing the _Additional Setup_ process, the build is as simple as
-+ `mvn exec:java -Dexec.args=` to run
-+ `mvn clean package assembly:single` to package
+After completing the _Additional Setup_ process, the build is as simple as running the following command:
+ `mvn clean package`
 
+ This command should produce a jar at `target/nutch-tika-solr*.jar`. Use this to run in the next step
 
 # How to run
+
+Run `java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar` command
 
 This project offers sub commands.
 
   ```
   Usage : Main <CMD>
   The following command(CMD)s are available
-          index : Index nutch segments to solr
+         index :  Index nutch segments to solr
+         graph :  Builds a graph of documents, and writes the edges set to file
+      pagerank :  Computes page rank for nodes in graph
   ```
 
   + **index** Command
 
+    This command loads nutch segment content to solr, parses metadata using tika.
+
   Usage :
   ```
-  java -jar target/nutch-tika-solr-1.0-SNAPSHOT-jar-with-dependencies.jar index
-  Option "-segs (--seg-paths)" is required
+  java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar index
    -batch (--batch-size) N  : Number of documents to buffer and post to solr
                               (default: 1000)
    -segs (--seg-paths) FILE : Path to a text file containing segment paths. One
@@ -57,8 +62,50 @@ This project offers sub commands.
 
   Example :
   ```
-  java -jar target/nutch-tika-solr-1.0-SNAPSHOT-jar-with-dependencies.jar index -batch 300 -segs data/paths-all.txt -url http://localhost:8983/solr
+  java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar index -batch 300 \
+    -segs data/paths-all.txt \
+    -url http://localhost:8983/solr
   ```
+
+  + **graph** Command
+
+    This command creates graph of documents in solr index. The edges will be written to text file on disk
+
+  Usage :
+  ```
+    java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph
+     -edge [locations | persons | dates |   : Edge type. This should be a field in
+      organizations]                           solr docs.
+     -out FILE                              : Output File for writing the edges of
+                                               graph.
+     -solr URL                              : Solr URL to query docs
+  ```
+
+  Example :
+  ```
+    java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph \
+      -solr http://localhost:8983/solr/  \
+      -out locations.txt -edge locations
+  ```
+  + **pagerank** Command
+
+      This command takes graph configuration in the form of edges, computes pagerank and outputs the ranks
+       to a file
+
+    Usage :
+    ```
+      java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar pagerank
+       -edges FILE : Path to file having graph's edges
+        -n N        : Number of Iteration
+        -out FILE   : Path to Output file for storing page ranks
+        -t N        : Number of Threads (default: 2)
+    ```
+
+    Example :
+    ```
+      java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph \
+        -edges locations.txt -n 5 -out pr-loc.txt
+    ```
 
 //FIXME: update this
 
