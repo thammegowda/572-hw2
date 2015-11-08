@@ -1,0 +1,10 @@
+# tokenize
+java -cp ../../nutch-tika-solr/target/nutch-tika-solr-1.0-SNAPSHOT.jar edu.stanford.nlp.process.PTBTokenizer jane-austen-emma-ch1.txt > jane-austen-emma-ch1.tok
+
+#Train a model
+java -cp ../../nutch-tika-solr/target/nutch-tika-solr-1.0-SNAPSHOT.jar edu.stanford.nlp.ie.crf.CRFClassifier -prop austen.prop
+
+# test
+java -cp ../../nutch-tika-solr/target/nutch-tika-solr-1.0-SNAPSHOT.jar edu.stanford.nlp.ie.crf.CRFClassifier -loadClassifier ner-model.ser.gz -testFile jane-austen-emma-ch2.tsv
+//BODY//*[not(self::script) and not(self::style)]/text()
+java -cp ../../nutch-tika-solr/target/nutch-tika-solr-1.0-SNAPSHOT.jar edu.stanford.nlp.process.PTBTokenizer firearms-text.txt > firearms-tokens.tok
