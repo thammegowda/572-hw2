@@ -56,7 +56,7 @@ public class SolrIndexer {
     private int batchSize = 1000;
 
     public FieldMapper mapper = FieldMapper.create();
-    private Parser parser;
+
 
     /**
      * Creates Solrj Bean from nutch content
@@ -77,8 +77,7 @@ public class SolrIndexer {
         Metadata metadata = content.getMetadata();
         if (reparse) {
             try {
-                parser = Parser.INSTANCE;
-                Pair<String, org.apache.tika.metadata.Metadata> pair =  parser.parse(content);
+                Pair<String, org.apache.tika.metadata.Metadata> pair = Parser.getPhase1Parser().parse(content);
                 bean.setContent(pair.getFirst());
                 org.apache.tika.metadata.Metadata tikaMd = pair.getSecond();
                 metadata = new Metadata();
@@ -106,7 +105,7 @@ public class SolrIndexer {
                     special = true; //could be special
                     String nameType = name.substring("NER_".length());
                     if (DATE.equals(nameType)) {
-                        Set<Date> dates = parser.parseDates(metadata.getValues(name));
+                        Set<Date> dates = Parser.parseDates(metadata.getValues(name));
                         bean.setDates(dates);
                     } else if (PERSON.equals(nameType)){
                         bean.setPersons(asSet(metadata.getValues(name)));

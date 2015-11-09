@@ -1,5 +1,6 @@
 package edu.usc.cs.ir.cwork.tika;
 
+import com.esotericsoftware.minlog.Log;
 import com.joestelmach.natty.DateGroup;
 import edu.usc.cs.ir.tika.ner.corenlp.CoreNLPNERecogniser;
 import org.apache.commons.io.IOUtils;
@@ -9,16 +10,16 @@ import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ner.NamedEntityParser;
+import org.apache.tika.parser.ner.regex.RegexNERecogniser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -27,29 +28,43 @@ import java.util.Set;
 /**
  * Created by tg on 10/25/15.
  */
-public enum Parser {
-    INSTANCE;
+public class Parser {
 
     public final Logger LOG = LoggerFactory.getLogger(Parser.class);
+    public static final String PHASE1_CONF = "tika-config-phase1.xml";
+    public static final String PHASE2_CONF = "tika-config-phase2.xml";
+    private static final com.joestelmach.natty.Parser NATTY_PARSER = new com.joestelmach.natty.Parser();
+    private static Parser PHASE1;
 
+    private static Parser PHASE2;
     private Tika tika;
-    private com.joestelmach.natty.Parser nattyParser;
 
-    Parser() {
-        nattyParser = new com.joestelmach.natty.Parser();
-        URL confFile = getClass().getClassLoader().getResource("tika-config.xml");
-        if (confFile != null) {
-            LOG.info("Found tika conf at  {}", confFile);
-            try {
-                System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, CoreNLPNERecogniser.class.getName());
-                TikaConfig config = new TikaConfig(confFile);
-                tika = new Tika(config);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            throw new RuntimeException("No Tika conf found");
+    public Parser(InputStream configStream) {
+
+        try {
+            System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, CoreNLPNERecogniser.class.getName());
+            TikaConfig config = new TikaConfig(configStream);
+            tika = new Tika(config);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    public synchronized static Parser getPhase1Parser(){
+        if (PHASE1 == null) {
+            PHASE1 = new Parser(Parser.class.getClassLoader().getResourceAsStream(PHASE1_CONF));
+        }
+        return PHASE1;
+    }
+
+    public synchronized static Parser getPhase2Parser(){
+        if (PHASE2 == null) {
+            String nerImpls = CoreNLPNERecogniser.class.getName()
+                    + "," + RegexNERecogniser.class.getName();
+            System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, nerImpls);
+            PHASE2 = new Parser(Parser.class.getClassLoader().getResourceAsStream(PHASE2_CONF));
+        }
+        return PHASE2;
     }
 
     /**
@@ -60,6 +75,21 @@ public enum Parser {
     public String parseContent(Content content){
         Pair<String, Metadata> pair = parse(content);
         return pair != null ? pair.getKey() : null;
+    }
+
+    /**
+     * Parses the text content
+     * @param content  the nutch content to be parsed
+     * @return the text content
+     */
+    public Metadata parseContent(String content){
+        try (InputStream stream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))){
+            Pair<String, Metadata> result = parse(stream);
+            return result == null ? null : result.getSecond();
+        } catch (IOException e) {
+            LOG.warn(e.getMessage(), e);
+            return null;
+        }
     }
 
     /**
@@ -81,7 +111,7 @@ public enum Parser {
      * @param stream the stream
      * @return pair of text content and metadata
      */
-    private Pair<String, Metadata> parse(ByteArrayInputStream stream) {
+    private Pair<String, Metadata> parse(InputStream stream) {
         Metadata metadata = new Metadata();
         try {
             String text = tika.parseToString(stream, metadata);
@@ -103,19 +133,23 @@ public enum Parser {
     public Pair<String, Metadata> parse(URL url) throws IOException, TikaException {
         Metadata metadata = new Metadata();
         try (InputStream stream = url.openStream()) {
-                return new Pair<>(tika.parseToString(stream, metadata), metadata);
+            return new Pair<>(tika.parseToString(stream, metadata), metadata);
         }
     }
 
-    public  Set<Date> parseDates(String...values) {
+    public static Set<Date> parseDates(String...values) {
         Set<Date> result = new HashSet<>();
         for (String value : values) {
             if (value == null) {
                 continue;
             }
-            List<DateGroup> groups;
-            synchronized (this) {
-                groups = nattyParser.parse(value);
+            List<DateGroup> groups = null;
+            synchronized (NATTY_PARSER) {
+                try {
+                    groups = NATTY_PARSER.parse(value);
+                } catch (Exception e) {
+                    Log.debug(e.getMessage());
+                }
             }
             if (groups != null) {
                 for (DateGroup group : groups) {
@@ -130,9 +164,9 @@ public enum Parser {
     }
 
     public static void main(String[] args) {
-        Parser parser = INSTANCE;
 
-        Set<Date> dates = parser.parseDates("August 1st 2015", "February", "February 2015", "15th february 2016");
+        Set<Date> dates = parseDates("August 1st 2015", "February",
+                "February 2015", "15th february 2016");
         System.out.println(dates);
     }
 }

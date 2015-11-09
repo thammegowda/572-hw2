@@ -14,7 +14,7 @@ import java.util.Arrays;
 public class ParseChecker {
 
     public static void main(String[] args) throws IOException, TikaException {
-        args = new String[]{"http://www.slickguns.com/product/tn-arms-2-receiver-bundle-free-shipping-magpul-colors-use-code-redd72015-pricing-8075?view=tiles"};
+        ///args = new String[]{"http://www.slickguns.com/product/tn-arms-2-receiver-bundle-free-shipping-magpul-colors-use-code-redd72015-pricing-8075?view=tiles"};
         if (args.length != 1) {
             System.out.println("Usage : <URL>");
             return;
@@ -22,14 +22,14 @@ public class ParseChecker {
 
         String urlStr = args[0];
         URL url = new URL(urlStr);
-        Pair<String, Metadata> pair = Parser.INSTANCE.parse(url);
+        Pair<String, Metadata> pair = Parser.getPhase2Parser().parse(url);
         System.out.println("Content = \n" + pair.getFirst());
         Metadata metadata = pair.getSecond();
         for (String name : metadata.names()) {
             String[] vals = metadata.getValues(name);
             System.out.println(name + " : " + Arrays.toString(vals));
             if ("NER_DATE".equals(name)) {
-                System.out.println("NER_DATES = "+ Parser.INSTANCE.parseDates(vals));
+                System.out.println("NER_DATES = "+ Parser.parseDates(vals));
             }
         }
     }
