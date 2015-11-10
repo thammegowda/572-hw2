@@ -144,7 +144,7 @@ public class Phase2Indexer {
         }
         //left out
         if (!buffer.isEmpty()) {
-            destSolr.addBeans(buffer);
+            destSolr.add(buffer);
         }
         LOG.info("Committing before exit. Num Docs = {}", count);
         UpdateResponse response = destSolr.commit();
@@ -154,6 +154,7 @@ public class Phase2Indexer {
     public static void main(String[] args) throws Exception {
 
        //args = "-batch 10 -src http://localhost:8983/solr/weapons1 -dest http://localhost:8983/solr/collection1".split(" ");
+        //args = "-src http://localhost:8983/solr/weapons1 -dest http://localhost:8983/solr/collection2 -q id:\"http://tucson.americanlisted.com/cars/1997-buick-lesabre-cust_32547135.html\"".split(" ");
         Phase2Indexer indexer = new Phase2Indexer();
         CmdLineParser cmdLineParser = new CmdLineParser(indexer);
         try {
@@ -162,7 +163,6 @@ public class Phase2Indexer {
             System.err.println(e.getMessage());
             cmdLineParser.printUsage(System.out);
             return;
-
         }
         indexer.run();
         System.out.println("Done");
