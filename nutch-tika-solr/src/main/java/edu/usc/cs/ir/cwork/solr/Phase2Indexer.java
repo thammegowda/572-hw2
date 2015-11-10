@@ -1,14 +1,8 @@
 package edu.usc.cs.ir.cwork.solr;
 
 import edu.usc.cs.ir.cwork.Main;
-import edu.usc.cs.ir.cwork.nutch.RecordIterator;
-import edu.usc.cs.ir.cwork.nutch.SegContentReader;
 import edu.usc.cs.ir.cwork.solr.schema.FieldMapper;
 import edu.usc.cs.ir.cwork.tika.Parser;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.math3.util.Pair;
-import org.apache.nutch.metadata.Metadata;
-import org.apache.nutch.protocol.Content;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -22,14 +16,10 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.*;
-
-import static org.apache.tika.parser.ner.NERecogniser.*;
 
 /**
  * This class accepts CLI args containing paths to Nutch segments and solr Url,
@@ -66,6 +56,13 @@ public class Phase2Indexer {
         map.put("NER_WEAPON_TYPE", "weapontypes");
     }
 
+    private String[] copyFields = {"id", "title", "content",
+            "contentLength", "boost", "lastModified",
+            "digest", "host"};
+
+    private Set<String> textFields = new HashSet<>(Arrays.asList("id", "title", "content",
+            "lastModified"));
+
     /**
      * runs the solr index command
      * @throws IOException
@@ -77,14 +74,13 @@ public class Phase2Indexer {
         String queryStr = "*:*";
         int start = 0;
         int rows = batchSize;
-        String[] fields = {"id", "title", "content"};
 
         SolrQuery query = new SolrQuery(queryStr);
         query.setStart(start);
         query.setRows(rows);
 
         SolrServer solrServer = new HttpSolrServer(srcSolr.toString());
-        SolrDocIterator docs = new SolrDocIterator(solrServer, queryStr, fields);
+        SolrDocIterator docs = new SolrDocIterator(solrServer, queryStr, copyFields);
         parseAndUpdate(docs);
 
     }
@@ -104,9 +100,12 @@ public class Phase2Indexer {
             StringBuilder sb = new StringBuilder();
 
             for (String field : doc.getFieldNames()) {
-                sb.append(doc.get(field)).append("\n");
                 delta.setField(field, doc.get(field));
+                if (textFields.contains(field)) {
+                    sb.append(doc.get(field)).append("\n");
+                }
             }
+
             Parser parser = Parser.getPhase2Parser();
             String content = sb.toString();
             org.apache.tika.metadata.Metadata md = parser.parseContent(content);
@@ -123,7 +122,6 @@ public class Phase2Indexer {
                     }
                 }
             }
-
             count++;
             buffer.add(delta);
             if (buffer.size() >= batchSize) {
@@ -148,7 +146,7 @@ public class Phase2Indexer {
     public static void main(String[] args) throws InterruptedException,
             SolrServerException, IOException {
 
-        args = "-batch 10 -src http://localhost:8983/solr/weapons1 -dest http://localhost:8983/solr/collection1".split(" ");
+       //args = "-batch 10 -src http://localhost:8983/solr/weapons1 -dest http://localhost:8983/solr/collection1".split(" ");
         Phase2Indexer indexer = new Phase2Indexer();
         CmdLineParser cmdLineParser = new CmdLineParser(indexer);
         try {
