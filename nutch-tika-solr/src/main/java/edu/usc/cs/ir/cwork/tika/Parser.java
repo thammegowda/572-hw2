@@ -30,6 +30,7 @@ import java.util.Set;
  */
 public class Parser {
 
+    public static final int A_DAY_MILLIS = 24 * 60 * 60 * 1000;
     public final Logger LOG = LoggerFactory.getLogger(Parser.class);
     public static final String PHASE1_CONF = "tika-config-phase1.xml";
     public static final String PHASE2_CONF = "tika-config-phase2.xml";
@@ -137,6 +138,27 @@ public class Parser {
         }
     }
 
+
+    /**
+     * Filters dates that are within 24 hour time from now.
+     * This is useful when date parser relate relative times to now
+     * @param dates dates from which todays date time needs to be removed
+     * @return filtered dates
+     */
+    public static Set<Date> filterDates(Set<Date> dates) {
+        Set<Date> result = new HashSet<>();
+        if (dates != null) {
+            for (Date next : dates) {
+                long freshness = Math.abs(System.currentTimeMillis() - next.getTime());
+                if (freshness > A_DAY_MILLIS) {
+                    result.add(next);
+                }
+            }
+        }
+        return result;
+    }
+
+
     public static Set<Date> parseDates(String...values) {
         Set<Date> result = new HashSet<>();
         for (String value : values) {
@@ -160,7 +182,7 @@ public class Parser {
                 }
             }
         }
-        return result;
+        return filterDates(result);
     }
 
     public static void main(String[] args) {
