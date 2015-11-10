@@ -44,49 +44,50 @@ This project offers sub commands.
          index :  Index nutch segments to solr
          graph :  Builds a graph of documents, and writes the edges set to file
       pagerank :  Computes page rank for nodes in graph
+      phase2parse :  Pharses the text content for NER and updates index
   ```
 
   + **index** Command
 
     This command loads nutch segment content to solr, parses metadata using tika.
 
-  Usage :
-  ```
-  java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar index
-   -batch (--batch-size) N  : Number of documents to buffer and post to solr
-                              (default: 1000)
-   -segs (--seg-paths) FILE : Path to a text file containing segment paths. One
-                              path per line
-   -url (--solr-url) URL    : Solr url
-  ```
+    Usage :
+    ```
+    java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar index
+     -batch (--batch-size) N  : Number of documents to buffer and post to solr
+                                (default: 1000)
+     -segs (--seg-paths) FILE : Path to a text file containing segment paths. One
+                                path per line
+     -url (--solr-url) URL    : Solr url
+    ```
 
-  Example :
-  ```
-  java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar index -batch 300 \
-    -segs data/paths-all.txt \
-    -url http://localhost:8983/solr
-  ```
+    Example :
+    ```
+    java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar index -batch 300 \
+      -segs data/paths-all.txt \
+      -url http://localhost:8983/solr
+    ```
 
   + **graph** Command
 
     This command creates graph of documents in solr index. The edges will be written to text file on disk
 
-  Usage :
-  ```
-    java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph
-     -edge [locations | persons | dates |   : Edge type. This should be a field in
-      organizations]                           solr docs.
-     -out FILE                              : Output File for writing the edges of
-                                               graph.
-     -solr URL                              : Solr URL to query docs
-  ```
+    Usage :
+    ```
+      java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph
+       -edge [locations | persons | dates |   : Edge type. This should be a field in
+        organizations]                           solr docs.
+       -out FILE                              : Output File for writing the edges of
+                                                 graph.
+       -solr URL                              : Solr URL to query docs
+    ```
 
-  Example :
-  ```
-    java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph \
-      -solr http://localhost:8983/solr/  \
-      -out locations.txt -edge locations
-  ```
+    Example :
+    ```
+      java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph \
+        -solr http://localhost:8983/solr/  \
+        -out locations.txt -edge locations
+    ```
   + **pagerank** Command
 
       This command takes graph configuration in the form of edges, computes pagerank and outputs the ranks
@@ -107,7 +108,30 @@ This project offers sub commands.
         -edges locations.txt -n 5 -out pr-loc.txt
     ```
 
-//FIXME: update this
+  + **phase2parse** command
+    This is a sub command for running phase 2 parser. In this phase docs from a
+    solr core (indexed from 'nutch index' command) are imported, Named entity parser is run to extract
+    names of people, locations, organizations, and also dates, weapon names, weapon types. The result is
+    updated to another solr core.
+
+    Usage :
+    ```
+    $ java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar phase2parse \
+     -batch (--batch-size) N : Number of documents to buffer and post to solr
+                               (default: 1000)
+     -dest (--dest-solr) URL : Destination Solr url
+     -q (--query) VAL        : Import Query (default: *:*)
+     -src (--src-solr) URL   : Source Solr url
+     -start (--start) N      : Import start (default: 0)
+    ```
+
+    Example :
+    ```
+      java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar phase2parse \
+        -src http://localhost:8983/solr/weapons1 \
+        -dest http://localhost:8983/solr/weapons3 \
+        -batch 100 -q '*:*' -start 0
+    ```
 
 
 # Developers / Team
