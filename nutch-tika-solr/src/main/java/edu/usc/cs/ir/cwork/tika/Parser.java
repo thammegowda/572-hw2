@@ -5,6 +5,7 @@ import com.joestelmach.natty.DateGroup;
 import edu.usc.cs.ir.tika.ner.corenlp.CoreNLPNERecogniser;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.math3.util.Pair;
+import org.apache.nutch.parse.Parse;
 import org.apache.nutch.protocol.Content;
 import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
@@ -58,13 +59,17 @@ public class Parser {
         return PHASE1;
     }
 
-    public synchronized static Parser getPhase2Parser(){
+    public  static Parser getPhase2Parser(){
         if (PHASE2 == null) {
-            String nerImpls = CoreNLPNERecogniser.class.getName()
-                    + "," + RegexNERecogniser.class.getName();
-            System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, nerImpls);
-            PHASE2 = new Parser(Parser.class.getClassLoader()
-                    .getResourceAsStream(PHASE2_CONF));
+            synchronized (Parser.class) {
+                if (PHASE2 == null) {
+                    String nerImpls = CoreNLPNERecogniser.class.getName()
+                            + "," + RegexNERecogniser.class.getName();
+                    System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, nerImpls);
+                    PHASE2 = new Parser(Parser.class.getClassLoader()
+                            .getResourceAsStream(PHASE2_CONF));
+                }
+            }
         }
         return PHASE2;
     }
