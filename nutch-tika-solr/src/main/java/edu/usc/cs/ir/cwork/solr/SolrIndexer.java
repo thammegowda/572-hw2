@@ -1,6 +1,5 @@
 package edu.usc.cs.ir.cwork.solr;
 
-import edu.usc.cs.ir.cwork.Main;
 import edu.usc.cs.ir.cwork.nutch.RecordIterator;
 import edu.usc.cs.ir.cwork.nutch.SegContentReader;
 import edu.usc.cs.ir.cwork.solr.schema.FieldMapper;
@@ -165,7 +164,7 @@ public class SolrIndexer {
         FileInputStream stream = new FileInputStream(segsFile);
         List<String> paths = IOUtils.readLines(stream);
         IOUtils.closeQuietly(stream);
-        Main.LOG.info("Found {} lines in {}", paths.size(), segsFile.getAbsolutePath());
+        LOG.info("Found {} lines in {}", paths.size(), segsFile.getAbsolutePath());
         SegContentReader reader = new SegContentReader(paths);
         RecordIterator recs = reader.read();
         index(recs, solr);
@@ -194,7 +193,7 @@ public class SolrIndexer {
             }
 
             if (System.currentTimeMillis() - st > delay) {
-                Main.LOG.info("Num Docs : {}", count);
+                LOG.info("Num Docs : {}", count);
                 st = System.currentTimeMillis();
             }
         }
@@ -205,9 +204,9 @@ public class SolrIndexer {
         }
 
         // commit
-        Main.LOG.info("Committing before exit. Num Docs = {}", count);
+        LOG.info("Committing before exit. Num Docs = {}", count);
         UpdateResponse response = solr.commit();
-        Main.LOG.info("Commit response : {}", response);
+        LOG.info("Commit response : {}", response);
     }
 
     public static void main(String[] args) throws InterruptedException,

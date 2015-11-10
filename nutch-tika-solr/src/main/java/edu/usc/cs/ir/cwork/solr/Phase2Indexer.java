@@ -1,9 +1,7 @@
 package edu.usc.cs.ir.cwork.solr;
 
-import edu.usc.cs.ir.cwork.Main;
 import edu.usc.cs.ir.cwork.solr.schema.FieldMapper;
 import edu.usc.cs.ir.cwork.tika.Parser;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -43,6 +41,18 @@ public class Phase2Indexer {
             required = false)
     private int batchSize = 1000;
 
+    @Option(name = "-start", aliases = {"--start"},
+            usage = "Import start",
+            required = false)
+    private int start = 0;
+
+
+    @Option(name = "-q", aliases = {"--query"},
+            usage = "Import Query",
+            required = false)
+    private String queryStr = "*:*";
+
+
     public FieldMapper mapper = FieldMapper.create();
 
 
@@ -57,11 +67,10 @@ public class Phase2Indexer {
     }
 
     private String[] copyFields = {"id", "title", "content",
-            "contentLength", "boost", "lastModified",
-            "digest", "host"};
+            "contentLength", "boost", "lastModified", "digest", "host"};
 
-    private Set<String> textFields = new HashSet<>(Arrays.asList("id", "title", "content",
-            "lastModified"));
+    private Set<String> textFields = new HashSet<>(
+            Arrays.asList("id", "title", "content", "lastModified"));
 
     /**
      * runs the solr index command
@@ -69,18 +78,11 @@ public class Phase2Indexer {
      * @throws InterruptedException
      * @throws SolrServerException
      */
-    public void run() throws IOException, InterruptedException, SolrServerException {
-
-        String queryStr = "*:*";
-        int start = 0;
-        int rows = batchSize;
-
-        SolrQuery query = new SolrQuery(queryStr);
-        query.setStart(start);
-        query.setRows(rows);
+    public void run() throws Exception {
 
         SolrServer solrServer = new HttpSolrServer(srcSolr.toString());
-        SolrDocIterator docs = new SolrDocIterator(solrServer, queryStr, copyFields);
+        SolrDocIterator docs = new SolrDocIterator(solrServer, queryStr,
+                start, batchSize, copyFields);
         parseAndUpdate(docs);
 
     }
@@ -122,6 +124,11 @@ public class Phase2Indexer {
                     }
                 }
             }
+
+            Set<Date> dates = Parser.parseDates(content);
+            if (dates != null && !dates.isEmpty()) {
+                delta.addField("dates", dates);
+            }
             count++;
             buffer.add(delta);
             if (buffer.size() >= batchSize) {
@@ -130,7 +137,8 @@ public class Phase2Indexer {
             }
 
             if (System.currentTimeMillis() - st > delay) {
-                Main.LOG.info("Num Docs : {}", count);
+                LOG.info("Num Docs : {},  Imported {} of {}", count,
+                        docs.getNextStart(), docs.getNumFound());
                 st = System.currentTimeMillis();
             }
         }
@@ -143,8 +151,7 @@ public class Phase2Indexer {
         LOG.info("Commit response : {}", response);
     }
 
-    public static void main(String[] args) throws InterruptedException,
-            SolrServerException, IOException {
+    public static void main(String[] args) throws Exception {
 
        //args = "-batch 10 -src http://localhost:8983/solr/weapons1 -dest http://localhost:8983/solr/collection1".split(" ");
         Phase2Indexer indexer = new Phase2Indexer();
@@ -155,6 +162,7 @@ public class Phase2Indexer {
             System.err.println(e.getMessage());
             cmdLineParser.printUsage(System.out);
             return;
+
         }
         indexer.run();
         System.out.println("Done");
