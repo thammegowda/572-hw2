@@ -4,17 +4,7 @@ package edu.usc.cs.ir.cwork.solr;
  * Created by nmante on 11/4/15.
  */
 
-import edu.usc.cs.ir.cwork.Main;
-import edu.usc.cs.ir.cwork.graph.Graph;
-import edu.usc.cs.ir.cwork.graph.Vertex;
-import edu.usc.cs.ir.cwork.nutch.RecordIterator;
-import edu.usc.cs.ir.cwork.nutch.SegContentReader;
-import edu.usc.cs.ir.cwork.solr.schema.FieldMapper;
-import edu.usc.cs.ir.cwork.tika.Parser;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.math3.util.Pair;
-import org.apache.nutch.metadata.Metadata;
-import org.apache.nutch.protocol.Content;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -29,10 +19,13 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
-
-import static org.apache.tika.parser.ner.NERecogniser.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This class accepts CLI args containing paths to Nutch segments and solr Url,
@@ -40,88 +33,96 @@ import static org.apache.tika.parser.ner.NERecogniser.*;
  */
 public class SolrPageRankUpdater {
 
-    public static final String MD_SUFFIX = "_md";
     private static Logger LOG = LoggerFactory.getLogger(SolrPageRankUpdater.class);
-    private static Set<String> TEXT_TYPES = new HashSet<>(Arrays.asList("html", "xhtml", "xml", "plain", "xhtml+xml"));
 
+    @Option(name="-solr", aliases = {"--solr-url"}, required = true,
+        usage = "Solr server URL")
+    private URL solrUrl;
 
-    private String solrUrl;
+    @Option(name="-ranks", aliases = {"--ranks-file"}, required = true,
+    usage = "File containing Page ranks. Each line should have 'URL\t(double)SCORE'")
+    private File ranksFile;
 
-    private boolean reparse = true;
+    @Option(name="-field", aliases = {"--rank-field"}, required = true,
+            usage = "Solr schema field for storing the page rank")
+    private String rankField;
 
+    @Option(name="-batch", aliases = {"--batch-size"},
+            usage = "Batch or buffer size")
     private int batchSize = 1000;
 
-    public FieldMapper mapper = FieldMapper.create();
-    private Parser parser;
-    private Graph graph;
-
-    public SolrPageRankUpdater(Graph graph, String url){
-        this.graph = graph;
-        this.solrUrl = url;
-    }
-
     /**
-     * Given a graph, post page rank scores of documents to Solr
+     * Updates documents in solr with pageranks
      *
      * @throws IOException
      * @throws SolrServerException
      */
-
     public void run() throws IOException, SolrServerException{
         // create the SolrJ Server
-        HttpSolrServer solr = new HttpSolrServer(solrUrl);
+        SolrServer solr = new HttpSolrServer(solrUrl.toString());
+
+        LOG.info("Reading page ranks from {}", rankField);
+        try (InputStream stream = new FileInputStream(ranksFile)) {
+            Iterator<String> lines = IOUtils.lineIterator(stream, StandardCharsets.UTF_8);
+
+            ArrayList<SolrInputDocument> buffer = new ArrayList<>(batchSize);
+            long st = System.currentTimeMillis();
+            long count = 0;
+            long delay = 2 * 1000;
+
+            while (lines.hasNext()) {
+                String line = lines.next().trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
+                String[] parts = line.split("\\s");
+                String id = parts[0];
+                Double score = Double.valueOf(parts[1]);
 
 
-        Set<Vertex> vertices = graph.getVertices();
-        ArrayList<SolrInputDocument> solrDocs = new ArrayList<>(batchSize);
-        long st = System.currentTimeMillis();
-        long count = 0;
-        long delay = 2 * 1000;
+                // create the document
+                SolrInputDocument sDoc = new SolrInputDocument();
+                // Add the id field, and page rank field to the document
+                sDoc.addField("id", id);
+                Map<String, Double> fieldModifier = new HashMap<>();
+                fieldModifier.put("set", score);
+                sDoc.addField(rankField, fieldModifier);  // add the map as the field value
+                buffer.add(sDoc);
 
-        for (Vertex v : vertices){
-            // create the document
-            SolrInputDocument sDoc = new SolrInputDocument();
+                count++;
+                if (buffer.size() >= batchSize) {
+                    try {
+                        solr.add(buffer);
+                        buffer.clear();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
 
-            // Add the id field, and page rank field to the document
-            sDoc.addField("id", v.getId());
-            Map<String,Double> fieldModifier = new HashMap<>();
-            fieldModifier.put("set", v.getScore());
-            sDoc.addField(graph.getType(), fieldModifier);  // add the map as the field value
-            System.out.print(sDoc);
-            solrDocs.add(sDoc);
-
-            count++;
-            if (solrDocs.size() >= batchSize) {
-                try {
-                    solr.add(solrDocs);
-                    solrDocs.clear();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                if (System.currentTimeMillis() - st > delay) {
+                    LOG.info("Num Docs : {}", count);
+                    st = System.currentTimeMillis();
                 }
             }
-
-            if (System.currentTimeMillis() - st > delay) {
-                Main.LOG.info("Num Docs : {}", count);
-                st = System.currentTimeMillis();
+            //left out
+            if (!buffer.isEmpty()) {
+                solr.add(buffer);
             }
+
+            // commit
+            LOG.info("Committing before exit. Num Docs = {}", count);
+            UpdateResponse response = solr.commit();
+            solr.shutdown();
+            LOG.info("Commit response : {}", response);
         }
 
-        //left out
-        if (!solrDocs.isEmpty()) {
-            solr.add(solrDocs);
-        }
-
-        // commit
-        Main.LOG.info("Committing before exit. Num Docs = {}", count);
-        UpdateResponse response = solr.commit();
-        solr.shutdown();
-        Main.LOG.info("Commit response : {}", response);
     }
 
     public static void main(String[] args) throws InterruptedException,
             SolrServerException, IOException {
-        SolrIndexer indexer = new SolrIndexer();
-        CmdLineParser cmdLineParser = new CmdLineParser(indexer);
+
+        SolrPageRankUpdater updater= new SolrPageRankUpdater();
+        CmdLineParser cmdLineParser = new CmdLineParser(updater);
         try {
             cmdLineParser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -129,7 +130,7 @@ public class SolrPageRankUpdater {
             cmdLineParser.printUsage(System.out);
             return;
         }
-        indexer.run();
+        updater.run();
         System.out.println("Done");
     }
 }

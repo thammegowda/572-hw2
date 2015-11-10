@@ -4,6 +4,7 @@ import edu.usc.cs.ir.cwork.relevance.GraphGenerator;
 import edu.usc.cs.ir.cwork.relevance.SparkPageRanker;
 import edu.usc.cs.ir.cwork.solr.Phase2Indexer;
 import edu.usc.cs.ir.cwork.solr.SolrIndexer;
+import edu.usc.cs.ir.cwork.solr.SolrPageRankUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,19 +14,21 @@ import java.util.Arrays;
 
 /**
  * This class offers CLI interface for the project
+ * @author Thamme Gowda
  */
 public class Main {
 
     public static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     /**
-     * Enumerate all the known sub-commands
+     * known sub-commands
      */
     private enum Cmd {
         index("Index nutch segments to solr", SolrIndexer.class),
         phase2parse("Pharses the text content for NER and updates index", Phase2Indexer.class),
         graph("Builds a graph of documents, and writes the edges set to file ", GraphGenerator.class),
-        pagerank("Computes page rank for nodes in graph", SparkPageRanker.class);
+        pagerank("Computes page rank for nodes in graph", SparkPageRanker.class),
+        updaterank("Updates Page rank", SolrPageRankUpdater.class);
 
         private final String description;
         private final Class<?> clazz;
