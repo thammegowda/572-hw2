@@ -34,16 +34,15 @@ public class Parser {
     public final Logger LOG = LoggerFactory.getLogger(Parser.class);
     public static final String PHASE1_CONF = "tika-config-phase1.xml";
     public static final String PHASE2_CONF = "tika-config-phase2.xml";
-    private static final com.joestelmach.natty.Parser NATTY_PARSER = new com.joestelmach.natty.Parser();
+    private static final com.joestelmach.natty.Parser NATTY_PARSER =
+            new com.joestelmach.natty.Parser();
     private static Parser PHASE1;
 
     private static Parser PHASE2;
     private Tika tika;
 
     public Parser(InputStream configStream) {
-
         try {
-            System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, CoreNLPNERecogniser.class.getName());
             TikaConfig config = new TikaConfig(configStream);
             tika = new Tika(config);
         } catch (Exception e) {
@@ -53,7 +52,8 @@ public class Parser {
 
     public synchronized static Parser getPhase1Parser(){
         if (PHASE1 == null) {
-            PHASE1 = new Parser(Parser.class.getClassLoader().getResourceAsStream(PHASE1_CONF));
+            PHASE1 = new Parser(Parser.class.getClassLoader()
+                    .getResourceAsStream(PHASE1_CONF));
         }
         return PHASE1;
     }
@@ -63,7 +63,8 @@ public class Parser {
             String nerImpls = CoreNLPNERecogniser.class.getName()
                     + "," + RegexNERecogniser.class.getName();
             System.setProperty(NamedEntityParser.SYS_PROP_NER_IMPL, nerImpls);
-            PHASE2 = new Parser(Parser.class.getClassLoader().getResourceAsStream(PHASE2_CONF));
+            PHASE2 = new Parser(Parser.class.getClassLoader()
+                    .getResourceAsStream(PHASE2_CONF));
         }
         return PHASE2;
     }
@@ -84,7 +85,8 @@ public class Parser {
      * @return the text content
      */
     public Metadata parseContent(String content){
-        try (InputStream stream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))){
+        try (InputStream stream = new ByteArrayInputStream(
+                content.getBytes(StandardCharsets.UTF_8))){
             Pair<String, Metadata> result = parse(stream);
             return result == null ? null : result.getSecond();
         } catch (IOException e) {
