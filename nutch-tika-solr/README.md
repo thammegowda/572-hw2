@@ -7,6 +7,9 @@ The main theme of this project is building inverted index using `Apache Lucene/S
 using `Apache Nutch` and it is read from segments using `Apache Hadoop-HDFS` API.
 Additional enrichment to documents is made by parsing documents with `Apache Tika`.
 
+NOTE : Visit [Step By Step Guide](./step-by-step.txt) for knowing how to make use of this code.
+
+
 # Requirements 
 + JDK 1.8  
 + Newer version of Maven (used 3.3)
@@ -45,6 +48,7 @@ This project offers sub commands.
          graph :  Builds a graph of documents, and writes the edges set to file
       pagerank :  Computes page rank for nodes in graph
       phase2parse :  Pharses the text content for NER and updates index
+      updaterank :  Updates Page rank
   ```
 
   + **index** Command
@@ -104,7 +108,7 @@ This project offers sub commands.
 
     Example :
     ```
-      java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar graph \
+      java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar pagerank \
         -edges locations.txt -n 5 -out pr-loc.txt
     ```
 
@@ -131,6 +135,24 @@ This project offers sub commands.
         -src http://localhost:8983/solr/weapons1 \
         -dest http://localhost:8983/solr/weapons3 \
         -batch 100 -q '*:*' -start 0
+    ```
+  + **updaterank** command
+    This command takes pageranks file from the output of 'pageranks' command and posts it to solr.
+
+    Usage :
+      ```
+      $ java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar updateranks
+        -batch (--batch-size) N    : Batch or buffer size (default: 1000)
+        -field (--rank-field) VAL  : Solr schema field for storing the page rank
+        -ranks (--ranks-file) FILE : File containing Page ranks. Each line should have
+                                     'URL	(double)SCORE'
+        -solr (--solr-url) URL     : Solr server URL
+      ```
+    Example :
+    ```
+    $ java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar updaterank \
+      -field location_pr -ranks pageranks-locations.txt \
+      -solr http://localhost:8983/solr/collection2
     ```
 
 
