@@ -1,0 +1,13 @@
+{
+	"queries" : [
+	{
+		"query" : "*:*",
+		"fields" : ["id", "locations", "dates"],
+		"sort" : "sequence_i desc",
+		"facet" : {
+			location : {terms : locations}
+		}	   
+
+	}
+	]
+}
