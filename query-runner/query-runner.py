@@ -32,7 +32,7 @@ def run_queries(args):
     # Iterate over the query file 
 
     for query_line in queries:
-        response = requests.get(solr_host_url + "/" + solr_core + "/" + query_line)
+        response = requests.get(solr_host_url + "/" + solr_core + "/" + query_line.strip())
         print >> sys.stderr, "Response for query: %s" % query_line 
         print json.dumps(response.json(), indent=4, sort_keys=True)
 
