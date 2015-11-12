@@ -7,6 +7,9 @@ import argparse
 import requests
 import sys
 import json
+from colorama import init 
+init()
+from colorama import Fore, Back, Style
 
 def create_parser():
     parser = argparse.ArgumentParser(description="Given a filename containing lucene queries, this program executes the queries and gives the results in a readable file")
@@ -33,8 +36,8 @@ def run_queries(args):
 
     for query_line in queries:
         response = requests.get(solr_host_url + "/" + solr_core + "/" + query_line.strip())
-        print >> sys.stderr, "Response for query: %s" % query_line 
-        print json.dumps(response.json(), indent=4, sort_keys=True)
+        print(Fore.GREEN + "Response for query: {}".format(query_line)) 
+        print(Fore.BLUE + json.dumps(response.json(), indent=4, sort_keys=True))
 
 
 def main():
