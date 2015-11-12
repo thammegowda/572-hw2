@@ -1,6 +1,7 @@
 package edu.usc.cs.ir.cwork.relevance;
 
 import edu.usc.cs.ir.cwork.solr.SolrDocIterator;
+import org.apache.commons.math3.util.Pair;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrDocument;
@@ -15,6 +16,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * This class offers functionality for graph creation and also provides command line interface.
@@ -46,6 +50,17 @@ public class GraphGenerator {
     @Option(name = "-edge", usage = "Edge type. This should be a field in solr docs.", required = true)
     private EdgeType edgeType;
 
+
+    public static final String RANGE_QRY = "[%s TO %s]";
+    public static final String SOLR_DATE_FMT = "YYYY-MM-dd'T'HH:mm:ss.SSS'Z'";
+    public static final SimpleDateFormat SOLR_DT_FORMAT = new SimpleDateFormat(SOLR_DATE_FMT);
+
+
+    public static String getSolrDateRangeQuery(Date start, Date end){
+        return String.format(RANGE_QRY, SOLR_DT_FORMAT.format(start),
+                SOLR_DT_FORMAT.format(end));
+    }
+
     /**
      * Generates sequence of edges by querying and joining docs in solr
      * @return number of edges
@@ -53,15 +68,16 @@ public class GraphGenerator {
      */
     private long generate() throws IOException {
 
+        String field = edgeType.name();
         long edgeCount = 0;
         long vertexCount = 0;
         long st = System.currentTimeMillis();
         SolrServer solr = new HttpSolrServer(solrUrl.toString());
-        String field = edgeType.name();
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))){
             String idField = "id";
-            String locationJoin = "{!join from="+ field +" to=" + field + "}";
 
+            String fieldValueJoin = "{!join from="+ field +" to=" + field + "}";
             // for each doc that has locations
             SolrDocIterator iterator = new SolrDocIterator(solr, field + ":*", idField);
             while (iterator.hasNext()){
@@ -69,7 +85,7 @@ public class GraphGenerator {
                 String id1 = (String) doc.getFieldValue(idField);
 
                 // join with other docs that has same edge field
-                String joinQuery = locationJoin + idField +  ":\"" + id1 + "\"";
+                String joinQuery = fieldValueJoin + idField +  ":\"" + id1 + "\"";
 
                 //get connected docs
                 SolrDocIterator connectedDocs = new SolrDocIterator(solr, joinQuery, idField);
@@ -95,6 +111,7 @@ public class GraphGenerator {
 
     public static void main(String[] args) throws IOException {
        //args = "-solr http://localhost:8983/solr/ -out locations.txt -edge locations".split(" ");
+       args = "-solr http://localhost:8983/solr/ -out dates.txt -edge dates".split(" ");
 
         GraphGenerator graphGen = new GraphGenerator();
         CmdLineParser parser = new CmdLineParser(graphGen);
