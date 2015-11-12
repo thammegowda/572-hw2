@@ -11,7 +11,7 @@ NOTE : Visit [Step By Step Guide](./step-by-step.txt) for knowing how to make us
 
 
 # Requirements 
-+ JDK 1.8  
++ JDK 1.8  (we faced issues with Open JDK 8, so please use Sun JDK 1.8)
 + Newer version of Maven (used 3.3)
 + Internet connection to download maven dependencies
 
@@ -23,7 +23,10 @@ so the following setup is necessary prior to building this project.
 + Build Latest Tika with Named Entity Recogniser
   
   + `git clone git@github.com:thammegowda/tika.git`
+  + git checkout hw2
+  + git pull origin hw2
   + `mvn clean install` (# may be `mvn clean install -DskipTests`)
+
 + Build Tika CoreNlp addon NLP
   + `git clone git@github.com:thammegowda/tika-ner-corenlp.git`
   + `mvn install`
@@ -37,7 +40,7 @@ After completing the _Additional Setup_ process, the build is as simple as runni
 
 # How to run
 
-Run `java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar` command
+Run `java -jar target/nutch-tika-solr-1.0-SNAPSHOT.jar` command. It will show sub commands
 
 This project offers sub commands.
 
@@ -113,6 +116,7 @@ This project offers sub commands.
     ```
 
   + **phase2parse** command
+
     This is a sub command for running phase 2 parser. In this phase docs from a
     solr core (indexed from 'nutch index' command) are imported, Named entity parser is run to extract
     names of people, locations, organizations, and also dates, weapon names, weapon types. The result is

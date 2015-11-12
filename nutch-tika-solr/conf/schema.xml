@@ -330,7 +330,7 @@
         <!-- core fields -->
         <field name="segment" type="string" stored="true" indexed="false"/>
         <field name="digest" type="string" stored="true" indexed="false"/>
-        <field name="boost" type="float" stored="true" indexed="false"/>
+        <field name="boost" type="float" stored="true" indexed="true"/>
 
         <!-- fields for index-basic plugin -->
         <!-- <field name="host" type="url" stored="false" indexed="true"/> -->
@@ -366,8 +366,9 @@
 
         <!-- Page Ranks-->
         <field name="location_pr" type="double" stored="true" indexed="true"/>
-        <field name="time_month_pr" type="double" stored="true" indexed="true"/>
-        <field name="time_year_pr" type="double" stored="true" indexed="true"/>
+        <field name="date_pr" type="double" stored="true" indexed="true"/>
+        <field name="person_pr" type="double" stored="true" indexed="true"/>
+        <field name="organization_pr" type="double" stored="true" indexed="true"/>
 
         <!-- Metadata fields -->
         <dynamicField name="*_s_md" type="string" indexed="true" stored="true"/>
@@ -498,7 +499,5 @@
     <copyField source="*_ls_md" dest="text"/>
     <copyField source="*_d_md" dest="text"/>
     <copyField source="*_ds_md" dest="text"/>
-
-
 
 </schema>
