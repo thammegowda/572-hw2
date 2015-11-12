@@ -6,6 +6,10 @@ Given a page rank file containing nodes, and there page ranks separated by space
 
 This program outputs a JSON file for D3 visualization.
 
+##Example Usage
+	
+	python converter.py -p pageranks-locations.txt -o d3_out.json
+
 ##Usage
 
 	usage: converter.py [-h] [-e EDGE_FILE | -p PR_FILE] [-o OUT_FILE]

@@ -1,0 +1,6 @@
+2003-07-01#mozilla.mailnews.base.src#nsMsgCopyService.cpp,0.195
+2003-07-01#mozilla.mailnews.import.src#nsImportMail.cpp,0.074
+2003-07-01#mozilla.mailnews.news.src#nsNntpIncomingServer.cpp,0.041
+2003-07-01#mozilla.mailnews.compose.src#nsMsgSend.cpp,0.037
+2003-07-01#mozilla.mailnews.imap.src#nsImapIncomingServer.cpp,0.031
+2003-07-01#mozilla.mailnews.compose.src#nsMsgCompose.cpp,0.026

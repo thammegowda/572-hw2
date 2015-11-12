@@ -12,6 +12,10 @@ It returns the results in a readable format.
 	pip install requests
 	pip install colorama
 
+##Example Usage
+
+	python query-runner.py -u http://localhost:8983/solr -c collection2 -f queries.txt
+
 
 ##Usage
 
