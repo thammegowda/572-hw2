@@ -5,7 +5,7 @@ generates the index directory
 bin/queryWithLDA index1 t/t001/lda/ldaHelper.obj t/t001/bugs latestresults/ -scoringCode 1
 generates the query results
 
-following files are important and generated 
+Following files are generated 
 1. files.dat
 2. vocab.dat
 3. words.dat
