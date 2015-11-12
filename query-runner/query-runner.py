@@ -13,7 +13,7 @@ def create_parser():
     parser.add_argument('-u', '--solr_host', help="The solr host url. (e.g., http://localhost:8983/solr", default="http://localhost:8983/solr")
     parser.add_argument('-c', '--collection', help="The collection/core name. Default is 'collection1'", default="collection1", type=str)
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-f', '--query_file', type=argparse.FileType('r'), help="A file containing lucene queries line by line. (e.g., query?q=*:*&facet=true&facet.date=dates&facet.date.start=1990-01-01T00:00:00Z&facet.date.end=NOW&rows=0&facet.date.gap=%2B7DAY&facet.mincount=1&facet.field.dates.sort=count")
+    group.add_argument('-f', '--query_file', type=argparse.FileType('r'), help="A file containing lucene queries line by line. (e.g., query?q=rifles+in+texas)")
     group.add_argument('-j', '--json_query_file', type=argparse.FileType('r'), help="A json file containing queries to be posted in a JSON solr query format")
     return parser
 
@@ -39,6 +39,7 @@ def run_queries(args):
 
 def main():
     parser = create_parser()
+    print "hello"
     args = parser.parse_args()
     run_queries(args)
 
