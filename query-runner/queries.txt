@@ -1,0 +1,5 @@
+query?q=*:*&facet=true&facet.date=dates&facet.date.start=1990-01-01T00:00:00Z&facet.date.end=NOW&rows=0&facet.date.gap=%2B7DAY&facet.mincount=1&facet.field.dates.sort=count
+query?q=locations:Texas+OR+locations:TX&facet=true&facet.date=dates&facet.date.start=1990-01-01T00:00:00Z&facet.date.end=2015-02-01T00:00:00Z&rows=0&facet.date.gap=%2B1DAY&facet.mincount=1&facet.field.dates.sort=count
+query?rows=0&fl=id&q=locations:Anacortes%20AND%20dates:[2015-07-01T00:00:00Z%20TO%202015-07-01T23:59:59Z]&facet=true&facet.field=weaponnames&facet.field=locations
+query?rows=0&facet=on&q=weaponnames:%22Beretta%2092%22&&facet.date=dates&facet.date.start=1990-01-01T00:00:00Z&facet.date.end=2015-02-01T00:00:00Z&rows=0&facet.date.gap=%2B1DAY&facet.mincount=1&facet.field.dates.sort=count&facet.field=locations
+query?q=*:*&facet=true&facet.field=weapontypes&rows=0
