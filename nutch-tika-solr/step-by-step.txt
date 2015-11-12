@@ -31,7 +31,7 @@ These steps are written to satisfy http://sunset.usc.edu/classes/cs572_2015b/CS5
 
 
 4. Run phase 2 parser :
-    This step reparses the merges two collections
+    This step reparses and merges two collections
     and enriches with named entities by reparsing the textual content and dates.
 
   Run the below command :
@@ -80,3 +80,6 @@ These steps are written to satisfy http://sunset.usc.edu/classes/cs572_2015b/CS5
               -ranks pr-dates.txt -field date_pr \
               -solr http://localhost:8983/solr/collection2
 
+    NOTE: similarly, if pageranks for persons and organizations are required, repeat
+        these steps for 'persons', 'organizations' edges. These respective fields in
+         schema for storing these ranks are 'person_pr' and 'organization_pr'.
