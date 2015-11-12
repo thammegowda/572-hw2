@@ -1,0 +1,9 @@
+2003-07-01#mozilla.mailnews.compose.src#nsMsgCreate.cpp,0.024
+2003-07-01#mozilla.mailnews.base.src#nsMsgOfflineManager.cpp,0.017
+2003-07-01#mozilla.mailnews.addrbook.src#nsAbLDAPReplicationData.cpp,0.014
+2003-07-01#mozilla.mailnews.compose.src#nsSmtpProtocol.cpp,0.014
+2003-07-01#mozilla.mailnews.local.src#nsMovemailService.cpp,0.014
+2003-07-01#mozilla.mailnews.imap.src#nsImapIncomingServer.cpp,0.005
+2003-07-01#mozilla.mailnews.base.src#nsMsgDBView.cpp,0.004
+2003-07-01#mozilla.mailnews.imap.src#nsImapService.cpp,0.004
+2003-07-01#mozilla.mailnews.news.src#nsNNTPProtocol.cpp,0.004
