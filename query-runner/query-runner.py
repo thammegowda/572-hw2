@@ -42,7 +42,6 @@ def run_queries(args):
 
 def main():
     parser = create_parser()
-    print "hello"
     args = parser.parse_args()
     run_queries(args)
 
