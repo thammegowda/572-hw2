@@ -364,6 +364,13 @@
         <field name="dates" type="date" stored="true" indexed="true" multiValued="true"/>
 
 
+        <field name="cities" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="states" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="countries" type="string" indexed="true" stored="true" multiValued="true"/>
+	    <field name="location_geos" type="location" indexed="true" stored="true" multiValued="true"/>
+	    <field name="location_latlons" type="string" indexed="true" stored="true" multiValued="true"/>
+
+
         <!-- Page Ranks-->
         <field name="location_pr" type="double" stored="true" indexed="true"/>
         <field name="date_pr" type="double" stored="true" indexed="true"/>
@@ -480,6 +487,8 @@
     <copyField source="anchor" dest="text"/>
     <copyField source="author" dest="text"/>
 
+
+    <copyField source="location_geos" dest="location_latlons"/>
 
     <copyField source="latLon" dest="location"/>
     <copyField source="persons" dest="text"/>
