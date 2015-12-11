@@ -17,15 +17,7 @@ NOTE : Visit [Step By Step Guide](./step-by-step.txt) for knowing how to make us
 
 # Additional Setup 
 During the course of this project, we enhanced `Apache Tika` by adding a `NamedEntityParser` and supplied an
-implementation of Named Entity Recogniser based on _StanfordCoreNLP_. These changes are not reached to mainstream
-so the following setup is necessary prior to building this project.
-
-+ Build Latest Tika with Named Entity Recogniser
-  
-  + `git clone git@github.com:thammegowda/tika.git`
-  + git checkout hw2
-  + git pull origin hw2
-  + `mvn clean install` (# may be `mvn clean install -DskipTests`)
+implementation of Named Entity Recogniser based on _StanfordCoreNLP_.  Edit: Its now part of Tika 1.12, pull the latest version of tika (>= 1.12)
 
 + Build Tika CoreNlp addon NLP
   + `git clone git@github.com:thammegowda/tika-ner-corenlp.git`
